@@ -68,6 +68,8 @@ const Reminders = () => {
       title="Reminders"
       description="Manage medication schedules, hydration, and daily task reminders for better care."
       icon={Bell}
+      bunnyImage="/assets/bunny4.svg"
+      themeColor="#F5A86B"
     >
       {/* Add Reminder Button */}
       <button className="btn btn-primary btn-large" style={{ marginBottom: '20px' }}>

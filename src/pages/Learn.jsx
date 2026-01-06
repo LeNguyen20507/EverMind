@@ -63,6 +63,8 @@ const Learn = () => {
       title="Learn"
       description="Access educational resources, articles, and guides to better understand and manage Alzheimer's care."
       icon={BookOpen}
+      bunnyImage="/assets/bunny2.svg"
+      themeColor="#A88FD9"
     >
       {/* Search Bar (Non-functional) */}
       <div className="search-bar">

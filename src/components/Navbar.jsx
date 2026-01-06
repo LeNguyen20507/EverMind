@@ -50,7 +50,13 @@ const Navbar = () => {
         >
           <AlertCircle size={20} />
         </button>
-        <div className="app-name">ADTreat</div>
+        <div className="app-name">
+          <img 
+            src="/assets/name.svg" 
+            alt="Don't you forget!" 
+            style={{ height: '60px', display: 'block' }}
+          />
+        </div>
         <button 
           className="profile-button" 
           onClick={() => navigate('/profile')}
