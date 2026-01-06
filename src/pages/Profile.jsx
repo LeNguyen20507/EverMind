@@ -42,18 +42,6 @@ const Profile = () => {
     { name: 'Mary Caregiver', relation: 'Secondary Caregiver', phone: '+1 (555) 987-6543' },
   ];
 
-  // Planned features
-  const plannedFeatures = [
-    'User profile management',
-    'Caregiver and patient profile switching',
-    'Notification preferences customization',
-    'Emergency contacts management',
-    'Language and accessibility settings',
-    'Data export and backup',
-    'Account security (2FA, password change)',
-    'Care team member management',
-  ];
-
   return (
     <PageLayout
       title="Profile"
@@ -140,36 +128,6 @@ const Profile = () => {
         <LogOut size={20} />
         Sign Out
       </button>
-
-      {/* Planned Features */}
-      <section className="section">
-        <h3 className="section-title">
-          <CheckCircle size={20} />
-          Planned Features
-        </h3>
-        <ul className="feature-list">
-          {plannedFeatures.map((feature, index) => (
-            <li key={index}>
-              <CheckCircle size={18} />
-              {feature}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Developer Notes */}
-      <div className="dev-notes">
-        <h4>
-          <Code size={16} />
-          Developer Notes
-        </h4>
-        <p>
-          Implement authentication system (Firebase Auth or similar). 
-          Add role-based access control for caregivers and patients. 
-          Create secure storage for emergency contacts. Consider 
-          HIPAA compliance for health-related data storage.
-        </p>
-      </div>
     </PageLayout>
   );
 };

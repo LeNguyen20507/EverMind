@@ -58,18 +58,6 @@ const Learn = () => {
     { title: 'Self-Care for Caregivers', readTime: '4 min read', category: 'Wellness' },
   ];
 
-  // Planned features
-  const plannedFeatures = [
-    'Comprehensive Alzheimer\'s disease information',
-    'Caregiver tips and best practices',
-    'Symptom guides and management strategies',
-    'Coping strategies for patients and families',
-    'Video resources and tutorials',
-    'Searchable article database',
-    'Bookmarking and reading lists',
-    'Expert-reviewed content',
-  ];
-
   return (
     <PageLayout
       title="Learn"
@@ -85,6 +73,80 @@ const Learn = () => {
           disabled
         />
       </div>
+
+      {/* Simulation Practice Feature */}
+      <section className="section">
+        <h3 className="section-title">
+          <Video size={20} />
+          Simulation Practice
+        </h3>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+          Practice real-world caregiving scenarios in a safe, interactive environment.
+        </p>
+        <div className="card" style={{ marginBottom: '12px', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ 
+              width: '48px', 
+              height: '48px', 
+              borderRadius: 'var(--radius-md)', 
+              background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white'
+            }}>
+              <Brain size={24} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ fontSize: '1rem', marginBottom: '4px' }}>Memory Care Scenarios</h4>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Interactive practice exercises</p>
+            </div>
+            <ChevronRight size={20} style={{ color: 'var(--text-light)' }} />
+          </div>
+        </div>
+        <div className="card" style={{ marginBottom: '12px', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ 
+              width: '48px', 
+              height: '48px', 
+              borderRadius: 'var(--radius-md)', 
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white'
+            }}>
+              <Users size={24} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ fontSize: '1rem', marginBottom: '4px' }}>Communication Training</h4>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Practice effective dialogue techniques</p>
+            </div>
+            <ChevronRight size={20} style={{ color: 'var(--text-light)' }} />
+          </div>
+        </div>
+        <div className="card" style={{ cursor: 'pointer' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ 
+              width: '48px', 
+              height: '48px', 
+              borderRadius: 'var(--radius-md)', 
+              background: 'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white'
+            }}>
+              <Heart size={24} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ fontSize: '1rem', marginBottom: '4px' }}>Crisis Management</h4>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Handle challenging situations</p>
+            </div>
+            <ChevronRight size={20} style={{ color: 'var(--text-light)' }} />
+          </div>
+        </div>
+      </section>
 
       {/* Content Categories */}
       <section className="section">
@@ -157,36 +219,6 @@ const Learn = () => {
           </p>
         </div>
       </section>
-
-      {/* Planned Features */}
-      <section className="section">
-        <h3 className="section-title">
-          <CheckCircle size={20} />
-          Planned Features
-        </h3>
-        <ul className="feature-list">
-          {plannedFeatures.map((feature, index) => (
-            <li key={index}>
-              <CheckCircle size={18} />
-              {feature}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Developer Notes */}
-      <div className="dev-notes">
-        <h4>
-          <Code size={16} />
-          Developer Notes
-        </h4>
-        <p>
-          Create CMS integration for article management. Implement full-text 
-          search with Algolia or similar. Add video player for educational 
-          content. Consider partnerships with Alzheimer's organizations for 
-          verified content.
-        </p>
-      </div>
     </PageLayout>
   );
 };

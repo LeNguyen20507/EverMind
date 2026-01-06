@@ -116,35 +116,6 @@ const Reminders = () => {
           </div>
         ))}
       </section>
-
-      {/* Planned Features */}
-      <section className="section">
-        <h3 className="section-title">
-          <CheckCircle size={20} />
-          Planned Features
-        </h3>
-        <ul className="feature-list">
-          {plannedFeatures.map((feature, index) => (
-            <li key={index}>
-              <CheckCircle size={18} />
-              {feature}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Developer Notes */}
-      <div className="dev-notes">
-        <h4>
-          <Code size={16} />
-          Developer Notes
-        </h4>
-        <p>
-          Implement local storage for reminders initially, then migrate to 
-          backend database. Use Web Push API for notifications. Consider 
-          integrating with device calendar APIs for cross-platform sync.
-        </p>
-      </div>
     </PageLayout>
   );
 };

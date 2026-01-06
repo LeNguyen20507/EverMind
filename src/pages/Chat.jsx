@@ -49,18 +49,6 @@ const Chat = () => {
     { icon: AlertTriangle, text: 'Emergency help' },
   ];
 
-  // Planned features
-  const plannedFeatures = [
-    'AI chatbot integration with medical knowledge base',
-    'Alzheimer\'s disease Q&A support',
-    'Personalized caregiver guidance',
-    'Emergency guidance and protocols',
-    'Conversation history saving',
-    'Voice input support',
-    'Multi-language support',
-    'Professional resource recommendations',
-  ];
-
   return (
     <PageLayout
       title="AI Assistant"
@@ -122,36 +110,6 @@ const Chat = () => {
           Chat functionality coming soon
         </p>
       </section>
-
-      {/* Planned Features */}
-      <section className="section">
-        <h3 className="section-title">
-          <CheckCircle size={20} />
-          Planned Features
-        </h3>
-        <ul className="feature-list">
-          {plannedFeatures.map((feature, index) => (
-            <li key={index}>
-              <CheckCircle size={18} />
-              {feature}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Developer Notes */}
-      <div className="dev-notes">
-        <h4>
-          <Code size={16} />
-          Developer Notes
-        </h4>
-        <p>
-          Integrate with OpenAI or similar AI API for chat functionality. 
-          Fine-tune model with Alzheimer's care knowledge base. Implement 
-          conversation memory and context awareness. Add emergency 
-          escalation triggers for crisis situations.
-        </p>
-      </div>
     </PageLayout>
   );
 };
