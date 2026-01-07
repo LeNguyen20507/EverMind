@@ -1,17 +1,16 @@
 /**
  * Navbar Component
- * Global top navigation bar with emergency button, tab indicator, and profile
- * Tab navigation below for Home, Learn, Reminders
+ * Global top navigation bar with emergency button (with label), app title, and patient switcher
+ * Tab navigation at BOTTOM for Home, Learn, Reminders
  */
 
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { Home, Bell, BookOpen, User, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import EmergencyModal from './EmergencyModal';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
   
   // Patient-specific emergency information
@@ -52,45 +51,43 @@ const Navbar = () => {
     <>
       {/* Global Top Navigation Bar - Fixed */}
       <nav className="global-top-nav">
-        {/* LEFT: Emergency Button */}
+        {/* LEFT: Emergency Button with Label */}
         <button 
-          className="emergency-btn" 
+          className="emergency-btn-with-label" 
           onClick={handleEmergency}
           aria-label="Emergency"
         >
-          <AlertCircle size={22} />
+          <AlertCircle size={20} />
+          <span>SOS</span>
         </button>
 
-        {/* CENTER: Current Tab or App Logo */}
+        {/* CENTER: App Title */}
         <div className="nav-center">
-          <img 
-            src="/assets/name.svg" 
-            alt="ADTreat" 
-            className="nav-logo"
-          />
+          <h1 className="app-title">ADTreat</h1>
         </div>
 
-        {/* RIGHT: Profile Button */}
+        {/* RIGHT: Patient Switcher Button */}
         <button 
-          className="profile-btn" 
-          onClick={() => navigate('/profile')}
-          aria-label="Profile"
+          className="patient-switcher-btn" 
+          onClick={() => {/* TODO: Open patient switcher */}}
+          aria-label="Switch Patient"
+          title="Switch Patient"
         >
-          <div className="profile-avatar-btn">
+          <div className="patient-avatar-btn">
             <User size={20} />
           </div>
         </button>
       </nav>
 
-      {/* Tab Navigation - Below Global Nav */}
-      <nav className="tab-nav">
+      {/* Bottom Tab Navigation - Fixed at Bottom */}
+      <nav className="bottom-tab-nav">
         {navItems.map(({ path, icon: Icon, label }) => (
           <NavLink
             key={path}
             to={path}
-            className={({ isActive }) => `tab-item ${isActive ? 'active' : ''}`}
+            className={({ isActive }) => `bottom-tab-item ${isActive ? 'active' : ''}`}
           >
-            <Icon size={20} />
+            <Icon size={22} />
             <span>{label}</span>
           </NavLink>
         ))}

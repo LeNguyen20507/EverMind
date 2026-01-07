@@ -1,26 +1,28 @@
 /**
- * Home Page - Non-Scrollable Compact Dashboard
- * Everything must fit in one viewport without scrolling
+ * Home Page - Patient Information Dashboard
+ * Non-scrollable overview showing key patient info at a glance
+ * The person button switches patients (handled in navbar)
  */
 
 import { 
   Phone, 
   Pill, 
   AlertTriangle,
-  Calendar,
-  Clock,
   User,
   Heart,
-  FileText
+  ChevronRight,
+  Activity,
+  Brain
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Home = () => {
   // Patient data
   const patientData = {
     name: 'John Doe',
-    photo: '/assets/patient-photo.jpg', // placeholder
     stage: 'Mild Stage',
-    condition: 'Alzheimer\'s Disease'
+    condition: 'Alzheimer\'s Disease',
+    age: 72
   };
 
   // Medical overview
@@ -39,31 +41,6 @@ const Home = () => {
     { name: 'Sarah J.', relation: 'Daughter', phone: '+1 (555) 987-6543' }
   ];
 
-  // Today's schedule (next 2-3 items only)
-  const todaySchedule = [
-    { time: '2:00 PM', title: 'Afternoon Medication', type: 'medication', isNext: true },
-    { time: '4:00 PM', title: 'Physical Therapy', type: 'appointment' },
-    { time: '6:00 PM', title: 'Dinner & Evening Meds', type: 'meal' }
-  ];
-
-  const getTypeIcon = (type) => {
-    switch(type) {
-      case 'medication': return Pill;
-      case 'appointment': return Calendar;
-      case 'meal': return Heart;
-      default: return Clock;
-    }
-  };
-
-  const getTypeColor = (type) => {
-    switch(type) {
-      case 'medication': return '#3B82F6';
-      case 'appointment': return '#8B5CF6';
-      case 'meal': return '#10B981';
-      default: return '#6B7280';
-    }
-  };
-
   return (
     <div className="home-page">
       {/* Patient Identity Section - Top Priority */}
@@ -73,8 +50,14 @@ const Home = () => {
         </div>
         <div className="patient-info">
           <h1 className="patient-name">{patientData.name}</h1>
-          <span className="patient-stage">{patientData.stage}</span>
+          <span className="patient-stage">{patientData.stage} • Age {patientData.age}</span>
         </div>
+      </div>
+
+      {/* Info Label */}
+      <div className="home-info-label">
+        <Brain size={14} />
+        <span>Current Patient Overview</span>
       </div>
 
       {/* Critical Information Cards Grid */}
@@ -83,7 +66,7 @@ const Home = () => {
         <div className="home-card medical-card">
           <div className="card-header">
             <Pill size={16} />
-            <span>Medical Overview</span>
+            <span>Medications</span>
           </div>
           <div className="card-content">
             <div className="med-list">
@@ -96,11 +79,7 @@ const Home = () => {
             </div>
             <div className="allergy-warning">
               <AlertTriangle size={12} />
-              <span>{medicalInfo.allergies.join(', ')}</span>
-            </div>
-            <div className="doctor-info">
-              <User size={12} />
-              <span>{medicalInfo.physician.name}</span>
+              <span>Allergies: {medicalInfo.allergies.join(', ')}</span>
             </div>
           </div>
         </div>
@@ -109,7 +88,7 @@ const Home = () => {
         <div className="home-card contacts-card">
           <div className="card-header">
             <Phone size={16} />
-            <span>Emergency Contacts</span>
+            <span>Contacts</span>
           </div>
           <div className="card-content">
             {emergencyContacts.map((contact, idx) => (
@@ -122,59 +101,47 @@ const Home = () => {
                   <span className="contact-name">{contact.name}</span>
                   <span className="contact-relation">{contact.relation}</span>
                 </div>
-                <Phone size={16} className="call-icon" />
+                <Phone size={14} className="call-icon" />
               </a>
             ))}
           </div>
         </div>
 
-        {/* Today's Schedule Card - Spans full width */}
-        <div className="home-card schedule-card">
+        {/* Today's Schedule Card - Navigate to Reminders */}
+        <Link to="/reminders" className="home-card schedule-card clickable">
           <div className="card-header">
-            <Calendar size={16} />
+            <Activity size={16} />
             <span>Today's Schedule</span>
+            <ChevronRight size={16} className="card-arrow" />
           </div>
-          <div className="card-content schedule-content">
-            {todaySchedule.map((item, idx) => {
-              const Icon = getTypeIcon(item.type);
-              const color = getTypeColor(item.type);
-              return (
-                <div 
-                  key={idx} 
-                  className={`schedule-item ${item.isNext ? 'next-up' : ''}`}
-                >
-                  <div 
-                    className="schedule-icon" 
-                    style={{ background: `${color}15`, color: color }}
-                  >
-                    <Icon size={14} />
-                  </div>
-                  <div className="schedule-info">
-                    <span className="schedule-title">{item.title}</span>
-                    <span className="schedule-time">{item.time}</span>
-                  </div>
-                  {item.isNext && (
-                    <span className="next-badge">Next</span>
-                  )}
-                </div>
-              );
-            })}
+          <div className="card-content schedule-preview">
+            <p className="schedule-hint">
+              View and manage daily reminders, medications, and appointments
+            </p>
           </div>
-        </div>
+        </Link>
 
-        {/* Quick Actions Card */}
-        <div className="home-card actions-card">
-          <div className="quick-actions-grid">
-            <button className="quick-action-item">
-              <FileText size={18} />
-              <span>Care Plan</span>
-            </button>
-            <button className="quick-action-item">
-              <Heart size={18} />
-              <span>Memories</span>
-            </button>
+        {/* Physician Info Card */}
+        <div className="home-card doctor-card">
+          <div className="card-header">
+            <Heart size={16} />
+            <span>Physician</span>
+          </div>
+          <div className="card-content">
+            <div className="doctor-info-display">
+              <span className="doctor-name">{medicalInfo.physician.name}</span>
+              <a href={`tel:${medicalInfo.physician.phone}`} className="doctor-phone">
+                <Phone size={12} />
+                Call
+              </a>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Bottom Label */}
+      <div className="home-footer-label">
+        <span>Tap the person icon (top right) to switch patients</span>
       </div>
     </div>
   );

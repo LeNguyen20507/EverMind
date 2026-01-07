@@ -1,6 +1,7 @@
 /**
  * Learn Page - Educational Content Hub
- * Scrollable with caregiver articles and AI chat interface
+ * AI Chat on top, then educational articles
+ * For Patient tab shows educational content
  */
 
 import { useState } from 'react';
@@ -17,11 +18,13 @@ import {
   ChevronRight,
   Sparkles,
   User,
-  Gamepad2
+  Gamepad2,
+  Lightbulb,
+  HelpCircle
 } from 'lucide-react';
 
 const Learn = () => {
-  const [activeSection, setActiveSection] = useState('caregivers'); // 'caregivers' or 'patient'
+  const [activeSection, setActiveSection] = useState('caregivers');
   const [chatMessages, setChatMessages] = useState([
     { type: 'bot', text: "Hello! I'm your caregiving assistant. Ask me anything about Alzheimer's care, and I'll do my best to help." }
   ]);
@@ -58,7 +61,7 @@ const Learn = () => {
     },
     { 
       id: 4,
-      title: "Caregiver Self-Care & Burnout Prevention", 
+      title: "Caregiver Self-Care", 
       description: "Taking care of yourself while caring for others",
       readTime: "5 min",
       category: "Wellness",
@@ -85,27 +88,59 @@ const Learn = () => {
     },
   ];
 
-  // Patient-focused content
-  const patientResources = [
-    { title: "Brain-Healthy Activities", icon: Brain, description: "Simple puzzles and games" },
-    { title: "Memory Exercises", icon: Gamepad2, description: "Gentle memory activities" },
-    { title: "About Your Condition", icon: Heart, description: "Easy-to-understand information" },
+  // Patient-focused educational content
+  const patientEducation = [
+    { 
+      title: "Understanding Your Journey", 
+      icon: Brain, 
+      description: "Simple information about memory changes",
+      color: '#8B5CF6'
+    },
+    { 
+      title: "Brain-Healthy Activities", 
+      icon: Gamepad2, 
+      description: "Fun puzzles and games for your mind",
+      color: '#3B82F6'
+    },
+    { 
+      title: "Staying Connected", 
+      icon: Heart, 
+      description: "Tips for communicating with loved ones",
+      color: '#EC4899'
+    },
+    { 
+      title: "Daily Wellness Tips", 
+      icon: Sun, 
+      description: "Simple ways to feel your best each day",
+      color: '#F59E0B'
+    },
+    { 
+      title: "Memory Helpers", 
+      icon: Lightbulb, 
+      description: "Tools and tricks to help you remember",
+      color: '#10B981'
+    },
+    { 
+      title: "Questions & Answers", 
+      icon: HelpCircle, 
+      description: "Common questions answered simply",
+      color: '#6366F1'
+    },
   ];
 
   // AI Chat suggested prompts
   const suggestedPrompts = [
     "How do I handle sundowning?",
-    "What are signs of medication side effects?",
+    "What are medication side effects?",
     "Tips for difficult conversations"
   ];
 
   const handleSendMessage = () => {
     if (!inputMessage.trim()) return;
     
-    // Add user message
     setChatMessages(prev => [...prev, { type: 'user', text: inputMessage }]);
     
-    // Simulate AI response (in real app, this would call an API)
+    // Simulate AI response
     setTimeout(() => {
       setChatMessages(prev => [...prev, { 
         type: 'bot', 
@@ -130,42 +165,13 @@ const Learn = () => {
           className={`toggle-btn ${activeSection === 'patient' ? 'active' : ''}`}
           onClick={() => setActiveSection('patient')}
         >
-          For John
+          For Patient
         </button>
       </div>
 
       {activeSection === 'caregivers' ? (
         <>
-          {/* Featured Articles Section */}
-          <section className="learn-section">
-            <h2 className="learn-section-title">
-              <BookOpen size={20} />
-              Featured Articles
-            </h2>
-            <div className="articles-grid">
-              {caregiverArticles.map((article) => {
-                const Icon = article.icon;
-                return (
-                  <div key={article.id} className="article-card">
-                    <div className="article-icon" style={{ background: `${article.color}15`, color: article.color }}>
-                      <Icon size={22} />
-                    </div>
-                    <div className="article-content">
-                      <span className="article-category" style={{ color: article.color, background: `${article.color}10` }}>
-                        {article.category}
-                      </span>
-                      <h3 className="article-title">{article.title}</h3>
-                      <p className="article-desc">{article.description}</p>
-                      <span className="article-time">{article.readTime} read</span>
-                    </div>
-                    <ChevronRight size={18} className="article-arrow" />
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* AI Chat Interface Section */}
+          {/* AI Chat Interface Section - ON TOP */}
           <section className="learn-section ai-chat-section">
             <h2 className="learn-section-title">
               <Sparkles size={20} />
@@ -218,31 +224,60 @@ const Learn = () => {
               </button>
             </div>
           </section>
+
+          {/* Featured Articles Section - BELOW AI CHAT */}
+          <section className="learn-section">
+            <h2 className="learn-section-title">
+              <BookOpen size={20} />
+              Featured Articles
+            </h2>
+            <div className="articles-grid">
+              {caregiverArticles.map((article) => {
+                const Icon = article.icon;
+                return (
+                  <div key={article.id} className="article-card">
+                    <div className="article-icon" style={{ background: `${article.color}15`, color: article.color }}>
+                      <Icon size={22} />
+                    </div>
+                    <div className="article-content">
+                      <span className="article-category" style={{ color: article.color, background: `${article.color}10` }}>
+                        {article.category}
+                      </span>
+                      <h3 className="article-title">{article.title}</h3>
+                      <p className="article-desc">{article.description}</p>
+                      <span className="article-time">{article.readTime} read</span>
+                    </div>
+                    <ChevronRight size={18} className="article-arrow" />
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         </>
       ) : (
-        /* Patient Resources Section */
+        /* Patient Educational Content Section */
         <section className="learn-section patient-section">
           <h2 className="learn-section-title patient-title">
             <Heart size={20} />
-            Resources for John
+            Educational Resources
           </h2>
           <p className="patient-subtitle">
-            Simple activities and information in easy-to-understand language
+            Easy-to-understand information and activities designed for you
           </p>
           
-          <div className="patient-resources">
-            {patientResources.map((resource, idx) => {
-              const Icon = resource.icon;
+          <div className="patient-education-grid">
+            {patientEducation.map((item, idx) => {
+              const Icon = item.icon;
               return (
-                <button key={idx} className="patient-resource-card">
-                  <div className="resource-icon">
+                <button key={idx} className="patient-education-card">
+                  <div className="education-icon" style={{ background: `${item.color}15`, color: item.color }}>
                     <Icon size={28} />
                   </div>
-                  <div className="resource-text">
-                    <h3>{resource.title}</h3>
-                    <p>{resource.description}</p>
+                  <div className="education-text">
+                    <h3>{item.title}</h3>
+                    <p>{item.description}</p>
                   </div>
-                  <ChevronRight size={20} />
+                  <ChevronRight size={20} className="education-arrow" />
                 </button>
               );
             })}
