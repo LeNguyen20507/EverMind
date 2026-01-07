@@ -135,6 +135,7 @@
 
 html {
   font-size: 16px;
+  overflow-x: hidden;
 }
 
 body {
@@ -146,6 +147,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
   font-weight: 400;
   letter-spacing: -0.011em;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 /* Typography */
@@ -163,6 +167,7 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--bg-primary);
   position: relative;
   box-shadow: var(--shadow-lg);
+  overflow-x: hidden;
 }
 
 /* Page Layout */
@@ -1376,7 +1381,7 @@ h1, h2, h3, h4, h5, h6 {
    ======================================== */
 
 .home-page {
-  padding: 80px 16px 90px;
+  padding: 76px 16px 86px;
   min-height: 100vh;
   max-height: 100vh;
   overflow: hidden;
@@ -1740,7 +1745,7 @@ h1, h2, h3, h4, h5, h6 {
    ======================================== */
 
 .learn-page {
-  padding: 80px 16px 90px;
+  padding: 76px 16px 86px;
   min-height: 100vh;
   background: #FAFCFE;
 }
@@ -2092,7 +2097,7 @@ h1, h2, h3, h4, h5, h6 {
    ======================================== */
 
 .reminders-page {
-  padding: 80px 16px 100px;
+  padding: 76px 16px 96px;
   min-height: 100vh;
   background: #FAFCFE;
 }
