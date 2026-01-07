@@ -1,124 +1,277 @@
 /**
- * Reminders Page
- * Medication & daily task reminders management
+ * Reminders Page - Scrollable List-Based
+ * Grouped by time/category with comprehensive reminder management
  */
 
-import { PageLayout } from '../components';
+import { useState } from 'react';
 import { 
   Bell, 
   Plus, 
   Pill, 
-  Droplets, 
-  Moon,
+  Calendar, 
+  Utensils,
+  Activity,
   Clock,
-  Repeat,
-  CheckCircle,
-  Code
+  Check,
+  ChevronRight,
+  Filter,
+  Trash2,
+  Edit3
 } from 'lucide-react';
 
 const Reminders = () => {
-  // Placeholder reminder types
-  const reminderTypes = [
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [completedReminders, setCompletedReminders] = useState([]);
+
+  // Today's reminders
+  const todayReminders = [
     { 
-      icon: Pill, 
+      id: 1,
+      time: '8:00 AM', 
+      title: 'Morning Medication - Donepezil', 
       type: 'medication',
-      title: 'Medication Reminders',
-      description: 'Track and manage medication schedules',
-      count: 3
+      context: 'Take with breakfast',
+      note: 'John prefers taking pills with orange juice',
+      benefit: 'Helps with memory'
     },
     { 
-      icon: Droplets, 
-      type: 'hydration',
-      title: 'Hydration Reminders',
-      description: 'Stay hydrated throughout the day',
-      count: 5
+      id: 2,
+      time: '10:00 AM', 
+      title: 'Morning Walk', 
+      type: 'activity',
+      context: '15-minute walk in the garden',
+      note: 'Best time for outdoor activities',
+      benefit: 'Improves mood and circulation'
     },
     { 
-      icon: Moon, 
-      type: 'rest',
-      title: 'Rest Reminders',
-      description: 'Scheduled rest and relaxation times',
-      count: 2
+      id: 3,
+      time: '12:00 PM', 
+      title: 'Lunch', 
+      type: 'meal',
+      context: 'Light lunch with hydration',
+      note: 'Prefers soft foods',
+      benefit: 'Nutrition and energy'
+    },
+    { 
+      id: 4,
+      time: '2:00 PM', 
+      title: 'Afternoon Medication - Memantine', 
+      type: 'medication',
+      context: 'Second dose',
+      note: 'Can be taken with or without food',
+      benefit: 'Helps with cognition'
+    },
+    { 
+      id: 5,
+      time: '4:00 PM', 
+      title: 'Physical Therapy Session', 
+      type: 'appointment',
+      context: 'With Dr. Johnson',
+      note: 'Wear comfortable clothes',
+      benefit: 'Maintains mobility'
     },
   ];
 
-  // Placeholder upcoming reminders
+  // Upcoming reminders (next 7 days)
   const upcomingReminders = [
-    { time: '8:00 AM', task: 'Take morning vitamins', type: 'medication', status: 'pending' },
-    { time: '9:30 AM', task: 'Drink water (Glass 1)', type: 'hydration', status: 'pending' },
-    { time: '12:00 PM', task: 'Lunch medication', type: 'medication', status: 'pending' },
-    { time: '2:00 PM', task: 'Afternoon nap', type: 'rest', status: 'pending' },
-    { time: '4:00 PM', task: 'Drink water (Glass 4)', type: 'hydration', status: 'pending' },
+    { id: 6, date: 'Tomorrow', time: '9:00 AM', title: 'Doctor Appointment', type: 'appointment' },
+    { id: 7, date: 'Wed, Jan 8', time: '2:00 PM', title: 'Memory Exercise Session', type: 'activity' },
+    { id: 8, date: 'Fri, Jan 10', time: '10:00 AM', title: 'Pharmacy Pickup', type: 'medication' },
   ];
 
-  // Planned features
-  const plannedFeatures = [
-    'Create, Read, Update, Delete (CRUD) reminder operations',
-    'Push notification system integration',
-    'Recurring reminders (daily, weekly, custom)',
-    'Time-based alerts with sound options',
-    'Medication dosage tracking',
-    'Caregiver notification sync',
-    'Reminder completion history',
-    'Smart reminder suggestions based on patterns',
+  // Recurring reminders
+  const recurringReminders = [
+    { id: 9, pattern: 'Daily', time: '8:00 PM', title: 'Evening Medication', type: 'medication' },
+    { id: 10, pattern: 'Every Mon/Wed/Fri', time: '3:00 PM', title: 'Brain Games', type: 'activity' },
+    { id: 11, pattern: 'Weekly', time: '10:00 AM', title: 'Video Call with Family', type: 'activity' },
   ];
+
+  const getTypeIcon = (type) => {
+    switch(type) {
+      case 'medication': return Pill;
+      case 'appointment': return Calendar;
+      case 'meal': return Utensils;
+      case 'activity': return Activity;
+      default: return Bell;
+    }
+  };
+
+  const getTypeColor = (type) => {
+    switch(type) {
+      case 'medication': return '#3B82F6';
+      case 'appointment': return '#8B5CF6';
+      case 'meal': return '#10B981';
+      case 'activity': return '#F59E0B';
+      default: return '#6B7280';
+    }
+  };
+
+  const toggleComplete = (id) => {
+    if (completedReminders.includes(id)) {
+      setCompletedReminders(prev => prev.filter(r => r !== id));
+    } else {
+      setCompletedReminders(prev => [...prev, id]);
+    }
+  };
+
+  const filterCategories = [
+    { id: 'all', label: 'All', icon: Bell },
+    { id: 'medication', label: 'Meds', icon: Pill },
+    { id: 'appointment', label: 'Appts', icon: Calendar },
+    { id: 'activity', label: 'Activities', icon: Activity },
+    { id: 'meal', label: 'Meals', icon: Utensils },
+  ];
+
+  const filteredTodayReminders = activeFilter === 'all' 
+    ? todayReminders 
+    : todayReminders.filter(r => r.type === activeFilter);
 
   return (
-    <PageLayout
-      title="Reminders"
-      description="Manage medication schedules, hydration, and daily task reminders for better care."
-      icon={Bell}
-      bunnyImage="/assets/bunny4.svg"
-      themeColor="#F5A86B"
-    >
-      {/* Add Reminder Button */}
-      <button className="btn btn-primary btn-large" style={{ marginBottom: '20px' }}>
-        <Plus size={20} />
-        Add New Reminder
+    <div className="reminders-page">
+      {/* Add New Reminder Button */}
+      <button className="add-reminder-btn">
+        <Plus size={22} />
+        <span>Add New Reminder</span>
       </button>
 
-      {/* Reminder Categories */}
-      <section className="section">
-        <h3 className="section-title">
-          <Clock size={20} />
-          Reminder Categories
-        </h3>
-        {reminderTypes.map(({ icon: Icon, type, title, description, count }, index) => (
-          <div key={index} className="reminder-item" style={{ cursor: 'pointer' }}>
-            <div className={`reminder-icon ${type}`}>
-              <Icon size={20} />
-            </div>
-            <div className="reminder-content">
-              <h4>{title}</h4>
-              <p>{description}</p>
-            </div>
-            <span className="reminder-time">{count} active</span>
-          </div>
+      {/* Filter Categories */}
+      <div className="filter-bar">
+        {filterCategories.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            className={`filter-chip ${activeFilter === id ? 'active' : ''}`}
+            onClick={() => setActiveFilter(id)}
+          >
+            <Icon size={16} />
+            <span>{label}</span>
+          </button>
         ))}
+      </div>
+
+      {/* TODAY Section */}
+      <section className="reminders-section">
+        <div className="section-header">
+          <h2 className="section-label today">TODAY</h2>
+          <span className="reminder-count">{filteredTodayReminders.length} reminders</span>
+        </div>
+        
+        <div className="reminders-list">
+          {filteredTodayReminders.map((reminder) => {
+            const Icon = getTypeIcon(reminder.type);
+            const color = getTypeColor(reminder.type);
+            const isCompleted = completedReminders.includes(reminder.id);
+            
+            return (
+              <div 
+                key={reminder.id} 
+                className={`reminder-card ${isCompleted ? 'completed' : ''}`}
+              >
+                <button 
+                  className={`complete-checkbox ${isCompleted ? 'checked' : ''}`}
+                  onClick={() => toggleComplete(reminder.id)}
+                  style={{ borderColor: color, background: isCompleted ? color : 'transparent' }}
+                >
+                  {isCompleted && <Check size={14} color="white" />}
+                </button>
+                
+                <div className="reminder-main">
+                  <div className="reminder-header">
+                    <span className="reminder-time">{reminder.time}</span>
+                    <div className="reminder-type-badge" style={{ background: `${color}15`, color }}>
+                      <Icon size={12} />
+                    </div>
+                  </div>
+                  <h3 className="reminder-title">{reminder.title}</h3>
+                  <p className="reminder-context">{reminder.context}</p>
+                  {reminder.note && (
+                    <p className="reminder-note">💡 {reminder.note}</p>
+                  )}
+                  <p className="reminder-benefit">{reminder.benefit}</p>
+                </div>
+
+                <div className="reminder-actions">
+                  <button className="action-btn edit">
+                    <Edit3 size={16} />
+                  </button>
+                  <button className="action-btn delete">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
-      {/* Upcoming Reminders */}
-      <section className="section">
-        <h3 className="section-title">
-          <Repeat size={20} />
-          Upcoming Today
-        </h3>
-        {upcomingReminders.map((reminder, index) => (
-          <div key={index} className="reminder-item">
-            <div className={`reminder-icon ${reminder.type}`}>
-              {reminder.type === 'medication' && <Pill size={20} />}
-              {reminder.type === 'hydration' && <Droplets size={20} />}
-              {reminder.type === 'rest' && <Moon size={20} />}
-            </div>
-            <div className="reminder-content">
-              <h4>{reminder.task}</h4>
-              <p>Tap to mark complete</p>
-            </div>
-            <span className="reminder-time">{reminder.time}</span>
-          </div>
-        ))}
+      {/* UPCOMING Section */}
+      <section className="reminders-section">
+        <div className="section-header">
+          <h2 className="section-label upcoming">UPCOMING</h2>
+          <span className="reminder-count">Next 7 days</span>
+        </div>
+        
+        <div className="reminders-list compact">
+          {upcomingReminders.map((reminder) => {
+            const Icon = getTypeIcon(reminder.type);
+            const color = getTypeColor(reminder.type);
+            
+            return (
+              <div key={reminder.id} className="reminder-card compact">
+                <div className="reminder-type-icon" style={{ background: `${color}15`, color }}>
+                  <Icon size={18} />
+                </div>
+                <div className="reminder-main">
+                  <div className="reminder-date">{reminder.date} • {reminder.time}</div>
+                  <h3 className="reminder-title">{reminder.title}</h3>
+                </div>
+                <ChevronRight size={18} className="chevron" />
+              </div>
+            );
+          })}
+        </div>
       </section>
-    </PageLayout>
+
+      {/* RECURRING Section */}
+      <section className="reminders-section">
+        <div className="section-header">
+          <h2 className="section-label recurring">RECURRING</h2>
+          <span className="reminder-count">Weekly patterns</span>
+        </div>
+        
+        <div className="reminders-list compact">
+          {recurringReminders.map((reminder) => {
+            const Icon = getTypeIcon(reminder.type);
+            const color = getTypeColor(reminder.type);
+            
+            return (
+              <div key={reminder.id} className="reminder-card compact">
+                <div className="reminder-type-icon" style={{ background: `${color}15`, color }}>
+                  <Icon size={18} />
+                </div>
+                <div className="reminder-main">
+                  <div className="reminder-pattern">{reminder.pattern} • {reminder.time}</div>
+                  <h3 className="reminder-title">{reminder.title}</h3>
+                </div>
+                <ChevronRight size={18} className="chevron" />
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Completed Section */}
+      {completedReminders.length > 0 && (
+        <section className="reminders-section completed-section">
+          <div className="section-header">
+            <h2 className="section-label completed">COMPLETED TODAY</h2>
+            <span className="reminder-count">{completedReminders.length} done</span>
+          </div>
+          <p className="completed-message">
+            ✓ {completedReminders.length} reminder(s) marked as complete. Great job!
+          </p>
+        </section>
+      )}
+    </div>
   );
 };
 

@@ -1,227 +1,255 @@
 /**
- * Learn Page
- * Educational resources about Alzheimer's disease
+ * Learn Page - Educational Content Hub
+ * Scrollable with caregiver articles and AI chat interface
  */
 
-import { PageLayout } from '../components';
+import { useState } from 'react';
 import { 
   BookOpen, 
-  Search,
   Brain,
   Heart,
   Users,
-  Video,
-  FileText,
-  CheckCircle,
-  Code,
-  ChevronRight
+  Shield,
+  Clock,
+  Sun,
+  MessageCircle,
+  Send,
+  ChevronRight,
+  Sparkles,
+  User,
+  Gamepad2
 } from 'lucide-react';
 
 const Learn = () => {
-  // Educational content categories
-  const categories = [
+  const [activeSection, setActiveSection] = useState('caregivers'); // 'caregivers' or 'patient'
+  const [chatMessages, setChatMessages] = useState([
+    { type: 'bot', text: "Hello! I'm your caregiving assistant. Ask me anything about Alzheimer's care, and I'll do my best to help." }
+  ]);
+  const [inputMessage, setInputMessage] = useState('');
+
+  // Featured articles for caregivers
+  const caregiverArticles = [
     { 
-      icon: Brain, 
-      color: 'blue',
-      title: 'Understanding Alzheimer\'s',
-      description: 'Disease stages, causes, and progression',
-      articles: 12
+      id: 1,
+      title: "Understanding Alzheimer's Stages", 
+      description: "Learn about the 7 stages of Alzheimer's and what to expect",
+      readTime: "8 min",
+      category: "Basics",
+      icon: Brain,
+      color: '#8B5CF6'
     },
     { 
-      icon: Heart, 
-      color: 'green',
-      title: 'Caregiver Wellness',
-      description: 'Self-care tips and stress management',
-      articles: 8
+      id: 2,
+      title: "Communication Strategies", 
+      description: "Effective ways to connect with your loved one",
+      readTime: "6 min",
+      category: "Communication",
+      icon: Users,
+      color: '#3B82F6'
     },
     { 
-      icon: Users, 
-      color: 'orange',
-      title: 'Communication Tips',
-      description: 'How to connect with your loved one',
-      articles: 10
+      id: 3,
+      title: "Managing Behavioral Changes", 
+      description: "Tips for handling agitation, wandering, and sundowning",
+      readTime: "10 min",
+      category: "Behavior",
+      icon: Heart,
+      color: '#EC4899'
     },
     { 
-      icon: FileText, 
-      color: 'purple',
-      title: 'Daily Care Guides',
-      description: 'Practical advice for everyday tasks',
-      articles: 15
+      id: 4,
+      title: "Caregiver Self-Care & Burnout Prevention", 
+      description: "Taking care of yourself while caring for others",
+      readTime: "5 min",
+      category: "Wellness",
+      icon: Sun,
+      color: '#F59E0B'
+    },
+    { 
+      id: 5,
+      title: "Daily Care Routines", 
+      description: "Creating structure and predictability",
+      readTime: "7 min",
+      category: "Routines",
+      icon: Clock,
+      color: '#10B981'
+    },
+    { 
+      id: 6,
+      title: "Safety & Wandering Prevention", 
+      description: "Home safety modifications and monitoring tips",
+      readTime: "9 min",
+      category: "Safety",
+      icon: Shield,
+      color: '#EF4444'
     },
   ];
 
-  // Placeholder article cards
-  const featuredArticles = [
-    { title: '10 Early Warning Signs of Alzheimer\'s', readTime: '5 min read', category: 'Basics' },
-    { title: 'Creating a Safe Home Environment', readTime: '8 min read', category: 'Safety' },
-    { title: 'Managing Sundowning Symptoms', readTime: '6 min read', category: 'Care' },
-    { title: 'Self-Care for Caregivers', readTime: '4 min read', category: 'Wellness' },
+  // Patient-focused content
+  const patientResources = [
+    { title: "Brain-Healthy Activities", icon: Brain, description: "Simple puzzles and games" },
+    { title: "Memory Exercises", icon: Gamepad2, description: "Gentle memory activities" },
+    { title: "About Your Condition", icon: Heart, description: "Easy-to-understand information" },
   ];
+
+  // AI Chat suggested prompts
+  const suggestedPrompts = [
+    "How do I handle sundowning?",
+    "What are signs of medication side effects?",
+    "Tips for difficult conversations"
+  ];
+
+  const handleSendMessage = () => {
+    if (!inputMessage.trim()) return;
+    
+    // Add user message
+    setChatMessages(prev => [...prev, { type: 'user', text: inputMessage }]);
+    
+    // Simulate AI response (in real app, this would call an API)
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, { 
+        type: 'bot', 
+        text: "Thank you for your question. As a caregiver, it's important to approach this with patience and understanding. I recommend consulting with your healthcare provider for personalized advice." 
+      }]);
+    }, 1000);
+    
+    setInputMessage('');
+  };
 
   return (
-    <PageLayout
-      title="Learn"
-      description="Access educational resources, articles, and guides to better understand and manage Alzheimer's care."
-      icon={BookOpen}
-      bunnyImage="/assets/bunny2.svg"
-      themeColor="#A88FD9"
-    >
-      {/* Search Bar (Non-functional) */}
-      <div className="search-bar">
-        <Search size={20} />
-        <input 
-          type="text" 
-          placeholder="Search articles, guides, videos..."
-          disabled
-        />
+    <div className="learn-page">
+      {/* Section Toggle */}
+      <div className="section-toggle">
+        <button 
+          className={`toggle-btn ${activeSection === 'caregivers' ? 'active' : ''}`}
+          onClick={() => setActiveSection('caregivers')}
+        >
+          For Caregivers
+        </button>
+        <button 
+          className={`toggle-btn ${activeSection === 'patient' ? 'active' : ''}`}
+          onClick={() => setActiveSection('patient')}
+        >
+          For John
+        </button>
       </div>
 
-      {/* Simulation Practice Feature */}
-      <section className="section">
-        <h3 className="section-title">
-          <Video size={20} />
-          Simulation Practice
-        </h3>
-        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-          Practice real-world caregiving scenarios in a safe, interactive environment.
-        </p>
-        <div className="card" style={{ marginBottom: '12px', cursor: 'pointer' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ 
-              width: '48px', 
-              height: '48px', 
-              borderRadius: 'var(--radius-md)', 
-              background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              <Brain size={24} />
+      {activeSection === 'caregivers' ? (
+        <>
+          {/* Featured Articles Section */}
+          <section className="learn-section">
+            <h2 className="learn-section-title">
+              <BookOpen size={20} />
+              Featured Articles
+            </h2>
+            <div className="articles-grid">
+              {caregiverArticles.map((article) => {
+                const Icon = article.icon;
+                return (
+                  <div key={article.id} className="article-card">
+                    <div className="article-icon" style={{ background: `${article.color}15`, color: article.color }}>
+                      <Icon size={22} />
+                    </div>
+                    <div className="article-content">
+                      <span className="article-category" style={{ color: article.color, background: `${article.color}10` }}>
+                        {article.category}
+                      </span>
+                      <h3 className="article-title">{article.title}</h3>
+                      <p className="article-desc">{article.description}</p>
+                      <span className="article-time">{article.readTime} read</span>
+                    </div>
+                    <ChevronRight size={18} className="article-arrow" />
+                  </div>
+                );
+              })}
             </div>
-            <div style={{ flex: 1 }}>
-              <h4 style={{ fontSize: '1rem', marginBottom: '4px' }}>Memory Care Scenarios</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Interactive practice exercises</p>
-            </div>
-            <ChevronRight size={20} style={{ color: 'var(--text-light)' }} />
-          </div>
-        </div>
-        <div className="card" style={{ marginBottom: '12px', cursor: 'pointer' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ 
-              width: '48px', 
-              height: '48px', 
-              borderRadius: 'var(--radius-md)', 
-              background: 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              <Users size={24} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <h4 style={{ fontSize: '1rem', marginBottom: '4px' }}>Communication Training</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Practice effective dialogue techniques</p>
-            </div>
-            <ChevronRight size={20} style={{ color: 'var(--text-light)' }} />
-          </div>
-        </div>
-        <div className="card" style={{ cursor: 'pointer' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ 
-              width: '48px', 
-              height: '48px', 
-              borderRadius: 'var(--radius-md)', 
-              background: 'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white'
-            }}>
-              <Heart size={24} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <h4 style={{ fontSize: '1rem', marginBottom: '4px' }}>Crisis Management</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Handle challenging situations</p>
-            </div>
-            <ChevronRight size={20} style={{ color: 'var(--text-light)' }} />
-          </div>
-        </div>
-      </section>
+          </section>
 
-      {/* Content Categories */}
-      <section className="section">
-        <h3 className="section-title">
-          <BookOpen size={20} />
-          Browse Categories
-        </h3>
-        {categories.map(({ icon: Icon, color, title, description, articles }, index) => (
-          <div key={index} className="category-card">
-            <div className={`category-icon ${color}`}>
-              <Icon size={24} />
+          {/* AI Chat Interface Section */}
+          <section className="learn-section ai-chat-section">
+            <h2 className="learn-section-title">
+              <Sparkles size={20} />
+              Ask AI About Caregiving
+            </h2>
+            
+            {/* Chat Messages */}
+            <div className="chat-messages">
+              {chatMessages.map((msg, idx) => (
+                <div key={idx} className={`chat-message ${msg.type}`}>
+                  <div className="message-avatar">
+                    {msg.type === 'bot' ? <Sparkles size={16} /> : <User size={16} />}
+                  </div>
+                  <div className="message-bubble">
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="category-content">
-              <h4>{title}</h4>
-              <p>{description}</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
-              <span style={{ fontSize: '0.8rem' }}>{articles}</span>
-              <ChevronRight size={18} />
-            </div>
-          </div>
-        ))}
-      </section>
 
-      {/* Featured Articles */}
-      <section className="section">
-        <h3 className="section-title">
-          <FileText size={20} />
-          Featured Articles
-        </h3>
-        {featuredArticles.map((article, index) => (
-          <div key={index} className="card" style={{ marginBottom: '12px', cursor: 'pointer' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <span style={{ 
-                  fontSize: '0.75rem', 
-                  background: 'var(--primary-100)', 
-                  color: 'var(--primary-600)',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  display: 'inline-block',
-                  marginBottom: '8px'
-                }}>
-                  {article.category}
-                </span>
-                <h4 style={{ fontSize: '1rem', marginBottom: '6px' }}>{article.title}</h4>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{article.readTime}</p>
-              </div>
-              <ChevronRight size={20} style={{ color: 'var(--text-light)' }} />
+            {/* Suggested Prompts */}
+            <div className="suggested-prompts">
+              {suggestedPrompts.map((prompt, idx) => (
+                <button 
+                  key={idx} 
+                  className="prompt-chip"
+                  onClick={() => setInputMessage(prompt)}
+                >
+                  {prompt}
+                </button>
+              ))}
             </div>
-          </div>
-        ))}
-      </section>
 
-      {/* Video Resources Placeholder */}
-      <section className="section">
-        <h3 className="section-title">
-          <Video size={20} />
-          Video Resources
-        </h3>
-        <div style={{ 
-          background: 'var(--neutral-100)', 
-          borderRadius: 'var(--radius-md)',
-          padding: '40px 20px',
-          textAlign: 'center'
-        }}>
-          <Video size={48} style={{ color: 'var(--text-light)', marginBottom: '12px' }} />
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            Video tutorials and guides coming soon
+            {/* Chat Input */}
+            <div className="chat-input-wrapper">
+              <input
+                type="text"
+                placeholder="Ask a question..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                className="chat-input-field"
+              />
+              <button 
+                className="chat-send-button"
+                onClick={handleSendMessage}
+                disabled={!inputMessage.trim()}
+              >
+                <Send size={18} />
+              </button>
+            </div>
+          </section>
+        </>
+      ) : (
+        /* Patient Resources Section */
+        <section className="learn-section patient-section">
+          <h2 className="learn-section-title patient-title">
+            <Heart size={20} />
+            Resources for John
+          </h2>
+          <p className="patient-subtitle">
+            Simple activities and information in easy-to-understand language
           </p>
-        </div>
-      </section>
-    </PageLayout>
+          
+          <div className="patient-resources">
+            {patientResources.map((resource, idx) => {
+              const Icon = resource.icon;
+              return (
+                <button key={idx} className="patient-resource-card">
+                  <div className="resource-icon">
+                    <Icon size={28} />
+                  </div>
+                  <div className="resource-text">
+                    <h3>{resource.title}</h3>
+                    <p>{resource.description}</p>
+                  </div>
+                  <ChevronRight size={20} />
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+    </div>
   );
 };
 
