@@ -31,9 +31,13 @@ const PatientSwitcher = ({ isOpen, onClose }) => {
             >
               <div 
                 className="patient-switcher-avatar"
-                style={{ background: `${patient.color}15`, borderColor: patient.color }}
+                style={{ background: patient.color, borderColor: patient.color }}
               >
-                <span>{patient.avatar}</span>
+                {patient.avatarUrl ? (
+                  <img src={patient.avatarUrl} alt={patient.name} style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                ) : (
+                  <span style={{ color: 'white', fontWeight: '700', fontSize: '1.1rem' }}>{patient.initials}</span>
+                )}
               </div>
               
               <div className="patient-switcher-info">

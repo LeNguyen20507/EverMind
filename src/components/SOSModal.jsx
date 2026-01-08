@@ -28,34 +28,14 @@ import { usePatient } from '../context/PatientContext';
 const mapPatientToProfile = (patient) => {
   if (!patient) return null;
   
-  // Check if this is a hackathon participant (has hackathonProject field)
-  const isHackathonParticipant = !!patient.hackathonProject;
+  // Generate context for Alzheimer's/Dementia patient
+  const favoriteMemory = patient.favoriteSongs?.[0] 
+    ? `listening to ${patient.favoriteSongs[0].title} by ${patient.favoriteSongs[0].artist}`
+    : 'spending time with family';
   
-  // Generate context based on patient type
-  let coreIdentity, safePlace, comfortMemory, commonTrigger, calmingTopics;
-  
-  if (isHackathonParticipant) {
-    // Hackathon participant profile
-    coreIdentity = `${patient.preferredName} is an ${patient.age}-year-old hackathon participant working on "${patient.hackathonProject}". The deadline is ${patient.hackathonDeadline}.`;
-    safePlace = `working on their hackathon project in ${patient.location}`;
-    comfortMemory = `${patient.preferredName} finds comfort in ${patient.copingStrategies?.join(', ') || 'taking breaks and talking things through'}.`;
-    commonTrigger = patient.stressors?.join(', ') || 'deadline pressure and technical challenges';
-    calmingTopics = [
-      `their hackathon project progress`,
-      `what they've accomplished so far`,
-      ...(patient.favoriteSongs?.map(s => s.title) || [])
-    ];
-  } else {
-    // Regular patient profile (Alzheimer's care)
-    const favoriteMemory = patient.favoriteSongs?.[0] 
-      ? `listening to ${patient.favoriteSongs[0].title} by ${patient.favoriteSongs[0].artist}`
-      : 'spending time with family';
-    coreIdentity = `${patient.preferredName} is ${patient.age} years old from ${patient.location}.`;
-    safePlace = `their home in ${patient.location}`;
-    comfortMemory = `${patient.preferredName} finds comfort in ${favoriteMemory}.`;
-    commonTrigger = 'unfamiliar surroundings or sudden changes';
-    calmingTopics = patient.favoriteSongs?.map(s => s.title) || ['Music', 'Family memories'];
-  }
+  const comfortMemories = patient.comfortMemories?.join(', ') || favoriteMemory;
+  const triggers = patient.triggers?.join(', ') || 'unfamiliar surroundings or sudden changes';
+  const calmingStrategies = patient.calmingStrategies?.join(', ') || 'listening to familiar music';
   
   return {
     patient_id: patient.id,
@@ -63,18 +43,18 @@ const mapPatientToProfile = (patient) => {
     preferred_address: patient.preferredName,
     age: patient.age,
     diagnosis_stage: patient.stage,
-    core_identity: coreIdentity,
-    safe_place: safePlace,
-    comfort_memory: comfortMemory,
-    common_trigger: commonTrigger,
+    core_identity: `${patient.preferredName} is ${patient.age} years old from ${patient.location}. ${patient.diagnosis || ''}`,
+    safe_place: `their home in ${patient.location}`,
+    comfort_memory: `${patient.preferredName} finds comfort in ${comfortMemories}.`,
+    common_trigger: triggers,
+    calming_strategies: calmingStrategies,
     voice_preference: 'warm_female',
-    calming_topics: calmingTopics,
-    avoid_topics: patient.stressors || patient.allergies || [],
+    calming_topics: patient.favoriteSongs?.map(s => s.title) || ['Music', 'Family memories'],
+    avoid_topics: patient.triggers || [],
     favorite_music: patient.favoriteSongs || [],
-    // Hackathon specific
-    hackathonProject: patient.hackathonProject,
-    hackathonDeadline: patient.hackathonDeadline,
-    hackathonTasks: patient.hackathonTasks
+    emergency_contacts: patient.emergencyContacts || [],
+    doctor_name: patient.doctorName,
+    doctor_phone: patient.doctorPhone
   };
 };
 
@@ -125,11 +105,11 @@ const SOSModal = ({ isOpen, onClose }) => {
     };
 
     const handleMessage = (message) => {
-      console.log('[SOS] Message:', message.type, message.role);
+      console.log('[SOS] Message:', message.type, message.role, message.transcriptType);
       
       if (message.type === 'transcript') {
-        if (message.role === 'assistant' && message.transcriptType === 'final') {
-          // AI is speaking - show only AI messages (no prefix needed)
+        if (message.role === 'assistant') {
+          // AI is speaking - show immediately (both partial and final)
           const transcript = message.transcript;
           setCurrentMessage(transcript);
           setVisibleMessage(transcript);
@@ -284,7 +264,19 @@ const SOSModal = ({ isOpen, onClose }) => {
         {/* Patient Info from Context */}
         {currentPatient && (
           <div className="sos-patient-info">
-            <span className="sos-patient-avatar">{currentPatient.avatar}</span>
+            <span className="sos-patient-avatar" style={{ background: currentPatient.color }}>
+              {currentPatient.avatarUrl ? (
+                <img 
+                  src={currentPatient.avatarUrl} 
+                  alt={currentPatient.name} 
+                  style={{ width: '100%', height: '100%', borderRadius: '50%' }}
+                />
+              ) : (
+                <span style={{ color: 'white', fontWeight: '700', fontSize: '0.9rem' }}>
+                  {currentPatient.initials}
+                </span>
+              )}
+            </span>
             <span className="sos-patient-name">{currentPatient.preferredName}</span>
             <span className="sos-patient-age">Age {currentPatient.age}</span>
           </div>

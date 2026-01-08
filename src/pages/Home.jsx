@@ -23,7 +23,11 @@ import {
   MessageCircle,
   CheckCircle,
   AlertCircle,
-  Loader
+  Loader,
+  CloudSun,
+  Sunset,
+  Stars,
+  HeartPulse
 } from 'lucide-react';
 import { usePatient } from '../context/PatientContext';
 
@@ -55,9 +59,9 @@ const Home = () => {
   ];
 
   const timeOfDayOptions = [
-    { id: 'morning', label: 'Morning', icon: '🌅' },
-    { id: 'afternoon', label: 'Afternoon', icon: '☀️' },
-    { id: 'evening', label: 'Evening', icon: '🌙' },
+    { id: 'morning', label: 'Morning', icon: CloudSun, color: '#F59E0B' },
+    { id: 'afternoon', label: 'Afternoon', icon: Sunset, color: '#F97316' },
+    { id: 'evening', label: 'Evening', icon: Stars, color: '#8B5CF6' },
   ];
 
   const getTypeInfo = (type) => {
@@ -144,7 +148,40 @@ const Home = () => {
         </h1>
         {currentPatient && (
           <span className="patient-meta">
-            {currentPatient.avatar} Age {currentPatient.age} • "{currentPatient.preferredName}" • {currentPatient.stage}
+            {currentPatient.avatarUrl ? (
+              <img 
+                src={currentPatient.avatarUrl} 
+                alt={currentPatient.name} 
+                style={{ 
+                  width: '24px', 
+                  height: '24px', 
+                  borderRadius: '50%', 
+                  verticalAlign: 'middle',
+                  marginRight: '6px',
+                  border: `2px solid ${currentPatient.color}`
+                }} 
+              />
+            ) : (
+              <span 
+                style={{ 
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: currentPatient.color,
+                  color: 'white',
+                  fontSize: '0.65rem',
+                  fontWeight: '700',
+                  lineHeight: '24px',
+                  textAlign: 'center',
+                  marginRight: '6px',
+                  verticalAlign: 'middle'
+                }}
+              >
+                {currentPatient.initials}
+              </span>
+            )}
+            Age {currentPatient.age} • "{currentPatient.preferredName}" • {currentPatient.stage}
           </span>
         )}
       </div>
@@ -209,7 +246,7 @@ const Home = () => {
                 <Clock size={20} />
                 <p>No {getTypeInfo(activeTab).label.toLowerCase()} reminders</p>
                 <button className="add-first-btn" onClick={handleAddNew}>
-                  <Plus size={12} />
+                  <Plus size={14} />
                   Add {getTypeInfo(activeTab).label}
                 </button>
               </div>
@@ -259,7 +296,10 @@ const Home = () => {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingReminder ? 'Edit Reminder' : 'New Reminder'}</h2>
+              <h2>
+                <HeartPulse size={24} strokeWidth={2} />
+                {editingReminder ? 'Edit Reminder' : 'New Reminder'}
+              </h2>
               <button className="modal-close" onClick={() => setShowModal(false)}>
                 <X size={24} />
               </button>
@@ -279,13 +319,16 @@ const Home = () => {
               <div className="form-group">
                 <label>Time of Day</label>
                 <div className="time-of-day-selector">
-                  {timeOfDayOptions.map(({ id, label, icon }) => (
+                  {timeOfDayOptions.map(({ id, label, icon: Icon, color }) => (
                     <button
                       key={id}
                       className={`time-of-day-option ${formData.timeOfDay === id ? 'active' : ''}`}
                       onClick={() => setFormData(prev => ({ ...prev, timeOfDay: id }))}
+                      style={{ '--time-color': color }}
                     >
-                      <span className="time-icon">{icon}</span>
+                      <span className="time-icon">
+                        <Icon size={22} strokeWidth={2} />
+                      </span>
                       <span>{label}</span>
                     </button>
                   ))}

@@ -30,9 +30,9 @@ const Navbar = () => {
           <span>SOS</span>
         </button>
 
-        {/* CENTER: App Title */}
+        {/* CENTER: App Logo */}
         <div className="nav-center">
-          <h1 className="app-title">ADTreat</h1>
+          <img src="/assets/name.svg" alt="EverMind" className="app-logo" />
         </div>
 
         {/* RIGHT: Patient Switcher Button */}
@@ -46,11 +46,21 @@ const Navbar = () => {
           <div 
             className="patient-avatar-btn"
             style={{ 
-              background: `${currentPatient?.color}20`,
+              background: currentPatient?.color,
               borderColor: currentPatient?.color 
             }}
           >
-            <span className="patient-avatar-emoji">{currentPatient?.avatar || '👤'}</span>
+            {currentPatient?.avatarUrl ? (
+              <img 
+                src={currentPatient.avatarUrl} 
+                alt={currentPatient.name} 
+                className="patient-avatar-img"
+              />
+            ) : (
+              <span className="patient-avatar-initials">
+                {currentPatient?.initials || 'PT'}
+              </span>
+            )}
           </div>
         </button>
       </nav>
