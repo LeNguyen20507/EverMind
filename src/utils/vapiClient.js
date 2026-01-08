@@ -103,8 +103,14 @@ export function createPersonalizedAssistant(profile) {
 
   console.log(`[VAPI] Using ${profile.voice_preference} voice:`, voiceConfig.voiceId);
 
+  // Customize first message based on profile type
+  const isHackathon = !!profile.hackathonProject;
+  const firstMessage = isHackathon
+    ? `Hey ${profile.preferred_address}! I heard you're working on your hackathon project. How's it going? I'm here to help you through any stress or just chat if you need a break.`
+    : `Hi ${profile.preferred_address}, I'm here to talk with you for a moment. How are you feeling right now?`;
+
   return {
-    name: `${profile.name} Companion`,
+    name: `${profile.name} Support`,
     model: {
       provider: "anthropic",
       model: "claude-sonnet-4-20250514",
@@ -114,26 +120,26 @@ export function createPersonalizedAssistant(profile) {
           content: systemPrompt
         }
       ],
-      temperature: 0.6,
-      // Function definitions for end_conversation
+      temperature: 0.7,
+      // Function definitions for end_conversation - only when user wants to stop
       functions: [
         {
           name: "end_conversation",
-          description: "Call this function after completing all 3 exchanges and delivering the closing statement. This will gracefully end the voice conversation.",
+          description: "Call this function ONLY when the user explicitly says goodbye, wants to end the call, or asks to stop. Do NOT call this automatically - let the conversation flow naturally.",
           parameters: {
             type: "object",
             properties: {
-              exchange_count: {
-                type: "number",
-                description: "The number of exchanges completed (should be 3)"
-              },
-              patient_state: {
+              reason: {
                 type: "string",
-                enum: ["calm", "slightly_agitated", "very_agitated"],
-                description: "Assessment of the patient's emotional state at end of conversation"
+                description: "Why the conversation is ending (e.g., 'user said goodbye', 'user requested to end')"
+              },
+              user_state: {
+                type: "string",
+                enum: ["calm", "better", "same", "needs_follow_up"],
+                description: "Assessment of the user's emotional state at end of conversation"
               }
             },
-            required: ["exchange_count", "patient_state"]
+            required: ["reason", "user_state"]
           }
         }
       ]
@@ -144,20 +150,20 @@ export function createPersonalizedAssistant(profile) {
       model: "nova-2",
       language: "en-US"
     },
-    // First message uses patient's preferred_address
-    firstMessage: `Hi ${profile.preferred_address}, I'm here to talk with you for a moment.`,
+    firstMessage: firstMessage,
     
-    // Call settings
-    silenceTimeoutSeconds: 45,      // Longer timeout for patients who may pause
-    maxDurationSeconds: 240,        // 4 minutes max (safety timeout)
-    responseDelaySeconds: 0.5,      // Slight delay for natural pacing
+    // Call settings - extended for longer conversations
+    silenceTimeoutSeconds: 60,      // 60 seconds before timeout
+    maxDurationSeconds: 600,        // 10 minutes max
+    responseDelaySeconds: 0.3,      // Quick responses for natural flow
     endCallFunctionEnabled: false,  // We handle ending via function call
     
     // Metadata for tracking
     metadata: {
       patientId: profile.patient_id,
       patientName: profile.name,
-      voicePreference: profile.voice_preference
+      voicePreference: profile.voice_preference,
+      isHackathonMode: isHackathon
     }
   };
 }

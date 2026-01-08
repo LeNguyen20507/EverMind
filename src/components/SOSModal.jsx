@@ -28,10 +28,34 @@ import { usePatient } from '../context/PatientContext';
 const mapPatientToProfile = (patient) => {
   if (!patient) return null;
   
-  // Generate comfort memory from favorite songs
-  const favoriteMemory = patient.favoriteSongs?.[0] 
-    ? `listening to ${patient.favoriteSongs[0].title} by ${patient.favoriteSongs[0].artist}`
-    : 'spending time with family';
+  // Check if this is a hackathon participant (has hackathonProject field)
+  const isHackathonParticipant = !!patient.hackathonProject;
+  
+  // Generate context based on patient type
+  let coreIdentity, safePlace, comfortMemory, commonTrigger, calmingTopics;
+  
+  if (isHackathonParticipant) {
+    // Hackathon participant profile
+    coreIdentity = `${patient.preferredName} is an ${patient.age}-year-old hackathon participant working on "${patient.hackathonProject}". The deadline is ${patient.hackathonDeadline}.`;
+    safePlace = `working on their hackathon project in ${patient.location}`;
+    comfortMemory = `${patient.preferredName} finds comfort in ${patient.copingStrategies?.join(', ') || 'taking breaks and talking things through'}.`;
+    commonTrigger = patient.stressors?.join(', ') || 'deadline pressure and technical challenges';
+    calmingTopics = [
+      `their hackathon project progress`,
+      `what they've accomplished so far`,
+      ...(patient.favoriteSongs?.map(s => s.title) || [])
+    ];
+  } else {
+    // Regular patient profile (Alzheimer's care)
+    const favoriteMemory = patient.favoriteSongs?.[0] 
+      ? `listening to ${patient.favoriteSongs[0].title} by ${patient.favoriteSongs[0].artist}`
+      : 'spending time with family';
+    coreIdentity = `${patient.preferredName} is ${patient.age} years old from ${patient.location}.`;
+    safePlace = `their home in ${patient.location}`;
+    comfortMemory = `${patient.preferredName} finds comfort in ${favoriteMemory}.`;
+    commonTrigger = 'unfamiliar surroundings or sudden changes';
+    calmingTopics = patient.favoriteSongs?.map(s => s.title) || ['Music', 'Family memories'];
+  }
   
   return {
     patient_id: patient.id,
@@ -39,15 +63,18 @@ const mapPatientToProfile = (patient) => {
     preferred_address: patient.preferredName,
     age: patient.age,
     diagnosis_stage: patient.stage,
-    core_identity: `${patient.preferredName} is ${patient.age} years old from ${patient.location}.`,
-    safe_place: `their home in ${patient.location}.`,
-    comfort_memory: `${patient.preferredName} finds comfort in ${favoriteMemory}.`,
-    common_trigger: 'unfamiliar surroundings or sudden changes',
-    voice_preference: patient.id === 'patient_002' ? 'warm_male' : 'warm_female',
-    calming_topics: patient.favoriteSongs?.map(s => s.title) || ['Music', 'Family memories'],
-    avoid_topics: patient.allergies || [],
-    family_members: ['Family'],
-    favorite_music: patient.favoriteSongs || []
+    core_identity: coreIdentity,
+    safe_place: safePlace,
+    comfort_memory: comfortMemory,
+    common_trigger: commonTrigger,
+    voice_preference: 'warm_female',
+    calming_topics: calmingTopics,
+    avoid_topics: patient.stressors || patient.allergies || [],
+    favorite_music: patient.favoriteSongs || [],
+    // Hackathon specific
+    hackathonProject: patient.hackathonProject,
+    hackathonDeadline: patient.hackathonDeadline,
+    hackathonTasks: patient.hackathonTasks
   };
 };
 
@@ -101,24 +128,13 @@ const SOSModal = ({ isOpen, onClose }) => {
       
       if (message.type === 'transcript') {
         if (message.role === 'assistant') {
-          // AI is speaking - store the message but delay showing
+          // AI is speaking - show immediately with "AI:" prefix
           const transcript = message.transcript;
           setCurrentMessage(transcript);
-          lastAISpeechTimeRef.current = Date.now();
-          
-          // Clear any existing transcript timeout
-          if (transcriptTimeoutRef.current) {
-            clearTimeout(transcriptTimeoutRef.current);
-          }
-          
-          // Hide transcript during AI speech, show after delay
-          setShowTranscript(false);
-          transcriptTimeoutRef.current = setTimeout(() => {
-            setVisibleMessage(transcript);
-            setShowTranscript(true);
-          }, TRANSCRIPT_DELAY_MS);
+          setVisibleMessage(`AI: ${transcript}`);
+          setShowTranscript(true);
         } else if (message.role === 'user') {
-          // User is speaking - show immediately and reset silence timer
+          // User is speaking - show immediately with "You:" prefix
           setVisibleMessage(`You: ${message.transcript}`);
           setShowTranscript(true);
           

@@ -4,27 +4,33 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const patientsData = {
   patient_001: {
     id: 'patient_001',
-    name: 'Margaret Thompson',
-    preferredName: 'Maggie',
-    age: 78,
-    stage: 'Moderate Alzheimer\'s',
-    location: 'Portland, Oregon',
-    avatar: '👵',
+    name: 'Nguyen Huynh',
+    preferredName: 'Nguyen',
+    age: 18,
+    stage: 'Hackathon Participant',
+    location: 'San Jose, California',
+    avatar: '👨‍💻',
     color: '#14B8A6', // teal
-    medications: [
-      { name: 'Donepezil', dosage: '10mg daily' },
-      { name: 'Memantine', dosage: '10mg twice daily' }
-    ],
-    allergies: ['Penicillin', 'Sulfa'],
+    medications: [],
+    allergies: [],
     favoriteSongs: [
-      { title: 'What a Wonderful World', artist: 'Louis Armstrong', type: 'song', calming: 'very_high' },
-      { title: 'Somewhere Over the Rainbow', artist: 'Judy Garland', type: 'song', calming: 'high' },
-      { title: 'Moon River', artist: 'Andy Williams', type: 'song', calming: 'high' }
+      { title: 'Lofi Hip Hop', artist: 'ChilledCow', type: 'song', calming: 'very_high' },
+      { title: 'Blinding Lights', artist: 'The Weeknd', type: 'song', calming: 'high' },
+      { title: 'Sunflower', artist: 'Post Malone', type: 'song', calming: 'high' }
     ],
-    voiceRecordings: [
-      { title: 'Sarah\'s Birthday Message', from: 'Daughter Sarah', type: 'recording' },
-      { title: 'Grandchildren Saying Hi', from: 'Emma & Jack', type: 'recording' }
-    ]
+    voiceRecordings: [],
+    // Hackathon specific data
+    hackathonProject: 'ADTreat - Alzheimer\'s Emergency Calming App',
+    hackathonDeadline: '1/11/2026',
+    hackathonTasks: [
+      'Finalize VAPI voice integration',
+      'Polish UI/UX',
+      'Test with demo patients',
+      'Prepare presentation slides',
+      'Record demo video'
+    ],
+    stressors: ['deadline pressure', 'debugging issues', 'presentation anxiety'],
+    copingStrategies: ['taking breaks', 'listening to music', 'talking it through']
   },
   patient_002: {
     id: 'patient_002',
