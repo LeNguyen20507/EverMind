@@ -90,10 +90,12 @@ const SOSModal = ({ isOpen, onClose }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   
-  // Transcript management with delay
-  const [currentMessage, setCurrentMessage] = useState('');
-  const [visibleMessage, setVisibleMessage] = useState('');
-  const [showTranscript, setShowTranscript] = useState(false);
+  // Separate transcript states for AI and Patient
+  const [aiMessage, setAiMessage] = useState('');
+  const [patientMessage, setPatientMessage] = useState('');
+  const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+  const [isPatientSpeaking, setIsPatientSpeaking] = useState(false);
+  
   const transcriptTimeoutRef = useRef(null);
   const silenceTimeoutRef = useRef(null);
 
@@ -114,17 +116,16 @@ const SOSModal = ({ isOpen, onClose }) => {
     const handleCallStart = () => {
       console.log('[SOS] Call started');
       setCallStatus('connected');
-      setCurrentMessage('Listening...');
-      setVisibleMessage('Listening...');
-      setShowTranscript(true);
+      setAiMessage('Connecting...');
+      setPatientMessage('');
     };
 
     const handleCallEnd = () => {
       console.log('[SOS] Call ended');
       setCallStatus('ended');
-      setCurrentMessage('Call ended.');
-      setShowTranscript(true);
-      setVisibleMessage('Call ended. Take care.');
+      setAiMessage('Call ended. Take care.');
+      setIsAiSpeaking(false);
+      setIsPatientSpeaking(false);
     };
 
     const handleMessage = (message) => {
@@ -132,21 +133,22 @@ const SOSModal = ({ isOpen, onClose }) => {
       
       if (message.type === 'transcript') {
         if (message.role === 'assistant') {
-          // AI is speaking - show immediately (both partial and final)
-          const transcript = message.transcript;
-          setCurrentMessage(transcript);
-          setVisibleMessage(transcript);
-          setShowTranscript(true);
-        } else if (message.role === 'user' && message.transcriptType === 'final') {
-          // User speaking - just reset silence timer, don't show their text
-          // Clear and restart silence timer
+          // AI is speaking - update AI box
+          setAiMessage(message.transcript);
+          setIsAiSpeaking(true);
+          setIsPatientSpeaking(false);
+        } else if (message.role === 'user') {
+          // Patient is speaking - update Patient box
+          setPatientMessage(message.transcript);
+          setIsPatientSpeaking(true);
+          setIsAiSpeaking(false);
+          
+          // Reset silence timer
           if (silenceTimeoutRef.current) {
             clearTimeout(silenceTimeoutRef.current);
           }
-          
-          // After 3 seconds of silence, AI can proceed
           silenceTimeoutRef.current = setTimeout(() => {
-            console.log('[SOS] User silence detected - AI can proceed');
+            setIsPatientSpeaking(false);
           }, SILENCE_THRESHOLD_MS);
         }
       }
@@ -163,23 +165,21 @@ const SOSModal = ({ isOpen, onClose }) => {
     const handleError = (error) => {
       console.error('[SOS] Vapi error:', error);
       setCallStatus('error');
-      setCurrentMessage('Connection error. Please try again.');
+      setAiMessage('Connection error. Please try again.');
     };
 
     const handleSpeechStart = () => {
-      console.log('[SOS] Speech started');
-      // Keep showing current AI message or Listening...
+      console.log('[SOS] User speech started');
+      setIsPatientSpeaking(true);
     };
 
     const handleSpeechEnd = () => {
-      console.log('[SOS] Speech ended');
-      // Start silence timer when user stops speaking
+      console.log('[SOS] User speech ended');
       if (silenceTimeoutRef.current) {
         clearTimeout(silenceTimeoutRef.current);
       }
       silenceTimeoutRef.current = setTimeout(() => {
-        console.log('[SOS] 3s silence - AI can proceed');
-        // Don't change the message, keep showing the last AI response
+        setIsPatientSpeaking(false);
       }, SILENCE_THRESHOLD_MS);
     };
 
@@ -217,8 +217,8 @@ const SOSModal = ({ isOpen, onClose }) => {
     }
 
     setCallStatus('connecting');
-    setCurrentMessage('Connecting to AI assistant...');
-    setShowTranscript(false);
+    setAiMessage('Connecting to AI assistant...');
+    setPatientMessage('');
 
     try {
       // Map current patient to profile format
@@ -262,9 +262,10 @@ const SOSModal = ({ isOpen, onClose }) => {
       endCall();
     }
     setCallStatus('idle');
-    setCurrentMessage('');
-    setVisibleMessage('');
-    setShowTranscript(false);
+    setAiMessage('');
+    setPatientMessage('');
+    setIsAiSpeaking(false);
+    setIsPatientSpeaking(false);
     onClose();
   };
 
@@ -331,12 +332,30 @@ const SOSModal = ({ isOpen, onClose }) => {
                 <span className="sos-call-status-text">Call Active</span>
               </div>
 
-              {/* Transcript with delayed display */}
-              {showTranscript && visibleMessage && (
-                <div className="sos-call-message">
-                  {visibleMessage}
+              {/* Two Horizontal Transcript Boxes */}
+              <div className="sos-transcript-row">
+                {/* AI Transcript Box */}
+                <div className={`sos-transcript-box ai-box ${isAiSpeaking ? 'speaking' : ''}`}>
+                  <div className="transcript-label">
+                    <Heart size={14} />
+                    <span>AI Assistant</span>
+                  </div>
+                  <div className="transcript-text">
+                    {aiMessage || 'Listening...'}
+                  </div>
                 </div>
-              )}
+
+                {/* Patient Transcript Box */}
+                <div className={`sos-transcript-box patient-box ${isPatientSpeaking ? 'speaking' : ''}`}>
+                  <div className="transcript-label">
+                    <Mic size={14} />
+                    <span>{currentPatient?.preferredName || 'Patient'}</span>
+                  </div>
+                  <div className="transcript-text">
+                    {patientMessage || 'Start speaking...'}
+                  </div>
+                </div>
+              </div>
 
               <div className="sos-call-controls">
                 <button 
@@ -380,7 +399,7 @@ const SOSModal = ({ isOpen, onClose }) => {
           {callStatus === 'error' && (
             <div className="sos-call-status error">
               <AlertCircle size={48} />
-              <span>{currentMessage}</span>
+              <span>{aiMessage || 'Connection error'}</span>
               <button className="sos-restart-btn" onClick={() => setCallStatus('idle')}>
                 Try Again
               </button>

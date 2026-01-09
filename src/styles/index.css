@@ -4939,6 +4939,92 @@ h6 {
   letter-spacing: 0.05em;
 }
 
+/* Two Horizontal Transcript Boxes */
+.sos-transcript-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.sos-transcript-box {
+  flex: 1;
+  padding: 14px;
+  background: white;
+  border-radius: 14px;
+  border: 2px solid var(--neutral-200);
+  transition: all 0.3s ease;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sos-transcript-box.speaking {
+  border-color: var(--primary-400);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.sos-transcript-box.ai-box {
+  background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+  border-color: var(--primary-200);
+}
+
+.sos-transcript-box.ai-box.speaking {
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2), 0 4px 16px rgba(20, 184, 166, 0.15);
+}
+
+.sos-transcript-box.patient-box {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #fcd34d;
+}
+
+.sos-transcript-box.patient-box.speaking {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2), 0 4px 16px rgba(245, 158, 11, 0.15);
+}
+
+.transcript-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.ai-box .transcript-label {
+  color: var(--primary-700);
+}
+
+.ai-box .transcript-label svg {
+  color: var(--primary-500);
+}
+
+.patient-box .transcript-label {
+  color: #92400e;
+}
+
+.patient-box .transcript-label svg {
+  color: #f59e0b;
+}
+
+.transcript-text {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  flex: 1;
+  overflow-y: auto;
+  max-height: 80px;
+}
+
+.sos-transcript-box.speaking .transcript-text {
+  font-weight: 500;
+}
+
 .sos-call-message {
   padding: 20px 24px;
   background: white;
