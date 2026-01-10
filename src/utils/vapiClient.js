@@ -103,11 +103,18 @@ export function createPersonalizedAssistant(profile) {
 
   console.log(`[VAPI] Using ${profile.voice_preference} voice:`, voiceConfig.voiceId);
 
-  // Customize first message based on profile type
+  // Customize first message based on context
+  // For SOS/emergency situations, use a calming, grounding opening
   const isHackathon = !!profile.hackathonProject;
-  const firstMessage = isHackathon
-    ? `Hey ${profile.preferred_address}! I heard you're working on your hackathon project. How's it going? I'm here to help you through any stress or just chat if you need a break.`
-    : `Hi ${profile.preferred_address}, I'm here to talk with you for a moment. How are you feeling right now?`;
+  const firstName = profile.preferred_address;
+  
+  let firstMessage;
+  if (isHackathon) {
+    firstMessage = `Hey ${firstName}! I heard you're working on your hackathon project. How's it going? I'm here to help you through any stress or just chat if you need a break.`;
+  } else {
+    // Emergency grounding first message - immediate comfort and presence
+    firstMessage = `Hi ${firstName}, it's okay, I'm right here with you. You're safe. Take a slow breath with me... that's it. I'm here to talk whenever you're ready.`;
+  }
 
   return {
     name: `${profile.name} Support`,

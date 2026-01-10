@@ -38,6 +38,13 @@ const mapPatientToProfile = (patient) => {
   const triggers = patient.triggers?.join(', ') || 'unfamiliar surroundings or sudden changes';
   const calmingStrategies = patient.calmingStrategies?.join(', ') || 'listening to familiar music';
 
+  // Determine voice preference based on patient data
+  // Use stored preference if available, otherwise infer from patient info
+  const voicePreference = patient.voicePreference || 
+    (patient.name?.toLowerCase().includes('margaret') || 
+     patient.name?.toLowerCase().includes('dorothy') ||
+     patient.name?.toLowerCase().includes('mary') ? 'warm_female' : 'warm_male');
+
   // Get recent tracking data to provide AI context
   const recentMoods = getMoodHistory(patient.id, 3); // Last 3 days
   const todayDate = new Date().toISOString().split('T')[0];
@@ -67,14 +74,16 @@ const mapPatientToProfile = (patient) => {
     comfort_memory: `${patient.preferredName} finds comfort in ${comfortMemories}.`,
     common_trigger: triggers,
     calming_strategies: calmingStrategies,
-    voice_preference: 'warm_female',
+    voice_preference: voicePreference,
     calming_topics: patient.favoriteSongs?.map(s => s.title) || ['Music', 'Family memories'],
     avoid_topics: patient.triggers || [],
     favorite_music: patient.favoriteSongs || [],
     emergency_contacts: patient.emergencyContacts || [],
     doctor_name: patient.doctorName,
     doctor_phone: patient.doctorPhone,
-    // NEW: Tracking data for AI context
+    // Flag to indicate this is an SOS emergency call
+    is_sos_call: true,
+    // Tracking data for AI context
     recent_mood_summary: moodSummary,
     todays_notes: noteSummary,
     recent_activities: recentActivities.slice(0, 10)
