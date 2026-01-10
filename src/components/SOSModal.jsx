@@ -9,13 +9,13 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { 
-  Phone, 
-  PhoneOff, 
-  Volume2, 
+import {
+  Phone,
+  PhoneOff,
+  Volume2,
   VolumeX,
-  X, 
-  Mic, 
+  X,
+  Mic,
   MicOff,
   Heart,
   AlertCircle,
@@ -28,34 +28,34 @@ import { getMoodHistory, getRecentActivities, getConversationNotes } from '../ut
 // Map PatientContext patient to MCP-style profile format for promptGenerator
 const mapPatientToProfile = (patient) => {
   if (!patient) return null;
-  
+
   // Generate context for Alzheimer's/Dementia patient
-  const favoriteMemory = patient.favoriteSongs?.[0] 
+  const favoriteMemory = patient.favoriteSongs?.[0]
     ? `listening to ${patient.favoriteSongs[0].title} by ${patient.favoriteSongs[0].artist}`
     : 'spending time with family';
-  
+
   const comfortMemories = patient.comfortMemories?.join(', ') || favoriteMemory;
   const triggers = patient.triggers?.join(', ') || 'unfamiliar surroundings or sudden changes';
   const calmingStrategies = patient.calmingStrategies?.join(', ') || 'listening to familiar music';
-  
+
   // Get recent tracking data to provide AI context
   const recentMoods = getMoodHistory(patient.id, 3); // Last 3 days
   const todayDate = new Date().toISOString().split('T')[0];
   const todayNotes = getConversationNotes(patient.id, todayDate);
   const recentActivities = getRecentActivities(3, patient.id);
-  
+
   // Format mood summary for AI
-  const moodSummary = recentMoods.length > 0 
+  const moodSummary = recentMoods.length > 0
     ? recentMoods.map(d => `${d.dayOfWeek}: ${d.predominantMood || 'not logged'}`).join(', ')
     : 'No recent mood data';
-  
+
   // Format notes for AI (prioritize emergency tags)
   const emergencyNotes = todayNotes.filter(n => n.tag === 'emergency');
   const otherNotes = todayNotes.filter(n => n.tag !== 'emergency').slice(0, 5);
   const noteSummary = [...emergencyNotes, ...otherNotes]
     .map(n => `[${n.tag || 'note'}] ${n.text}`)
     .join(' | ') || 'No notes today';
-  
+
   return {
     patient_id: patient.id,
     name: patient.name,
@@ -84,18 +84,18 @@ const mapPatientToProfile = (patient) => {
 const SOSModal = ({ isOpen, onClose }) => {
   // Get current patient from context (synced with top-right switcher)
   const { currentPatient } = usePatient();
-  
+
   // Call states
   const [callStatus, setCallStatus] = useState('idle'); // idle, connecting, connected, ended, error
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
-  
+
   // Separate transcript states for AI and Patient
   const [aiMessage, setAiMessage] = useState('');
   const [patientMessage, setPatientMessage] = useState('');
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [isPatientSpeaking, setIsPatientSpeaking] = useState(false);
-  
+
   const transcriptTimeoutRef = useRef(null);
   const silenceTimeoutRef = useRef(null);
 
@@ -128,21 +128,54 @@ const SOSModal = ({ isOpen, onClose }) => {
       setIsPatientSpeaking(false);
     };
 
+    const handleSpeechStart = () => {
+      console.log('[SOS] User speech started');
+      setIsPatientSpeaking(true);
+    };
+
+    const handleSpeechEnd = () => {
+      console.log('[SOS] User speech ended');
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+      }
+      silenceTimeoutRef.current = setTimeout(() => {
+        setIsPatientSpeaking(false);
+        // Clear patient transcript after 10s of silence to keep it readable
+        setTimeout(() => setPatientMessage(''), 10000);
+      }, SILENCE_THRESHOLD_MS);
+    };
+
+    // Helper for AI message persistence
+    const aiPersistenceTimeoutRef = { current: null };
+
     const handleMessage = (message) => {
       console.log('[SOS] Message:', message.type, message.role, message.transcriptType);
-      
+
       if (message.type === 'transcript') {
         if (message.role === 'assistant') {
           // AI is speaking - update AI box
           setAiMessage(message.transcript);
           setIsAiSpeaking(true);
           setIsPatientSpeaking(false);
+
+          if (aiPersistenceTimeoutRef.current) clearTimeout(aiPersistenceTimeoutRef.current);
+
+          if (message.transcriptType === 'final') {
+            // Keep final AI message visible for 15 seconds after they stop
+            aiPersistenceTimeoutRef.current = setTimeout(() => {
+              setIsAiSpeaking(false);
+              // We'll keep the text itself but fade the 'speaking' highlight
+            }, 2000); // Highlight for 2s after final
+
+            // Actually empty the message much later (20s)
+            setTimeout(() => setAiMessage(''), 20000);
+          }
         } else if (message.role === 'user') {
           // Patient is speaking - update Patient box
           setPatientMessage(message.transcript);
           setIsPatientSpeaking(true);
           setIsAiSpeaking(false);
-          
+
           // Reset silence timer
           if (silenceTimeoutRef.current) {
             clearTimeout(silenceTimeoutRef.current);
@@ -152,7 +185,7 @@ const SOSModal = ({ isOpen, onClose }) => {
           }, SILENCE_THRESHOLD_MS);
         }
       }
-      
+
       // Handle function calls (end_conversation)
       if (message.type === 'function-call' && message.functionCall?.name === 'end_conversation') {
         console.log('[SOS] End conversation function called');
@@ -166,21 +199,6 @@ const SOSModal = ({ isOpen, onClose }) => {
       console.error('[SOS] Vapi error:', error);
       setCallStatus('error');
       setAiMessage('Connection error. Please try again.');
-    };
-
-    const handleSpeechStart = () => {
-      console.log('[SOS] User speech started');
-      setIsPatientSpeaking(true);
-    };
-
-    const handleSpeechEnd = () => {
-      console.log('[SOS] User speech ended');
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current);
-      }
-      silenceTimeoutRef.current = setTimeout(() => {
-        setIsPatientSpeaking(false);
-      }, SILENCE_THRESHOLD_MS);
     };
 
     vapi.on('call-start', handleCallStart);
@@ -223,7 +241,7 @@ const SOSModal = ({ isOpen, onClose }) => {
     try {
       // Map current patient to profile format
       const profile = mapPatientToProfile(currentPatient);
-      
+
       if (!profile) {
         throw new Error('No patient selected');
       }
@@ -231,10 +249,10 @@ const SOSModal = ({ isOpen, onClose }) => {
       // Create personalized assistant configuration
       const assistantConfig = createPersonalizedAssistant(profile);
       console.log('[SOS] Starting call for:', profile.name);
-      
+
       // Start the call
       await vapi.start(assistantConfig);
-      
+
     } catch (error) {
       console.error('[SOS] Failed to start call:', error);
       setCallStatus('error');
@@ -246,7 +264,7 @@ const SOSModal = ({ isOpen, onClose }) => {
     console.log('[SOS] Ending call');
     vapi.stop();
     setCallStatus('ended');
-    
+
     // Clear all timeouts
     if (transcriptTimeoutRef.current) clearTimeout(transcriptTimeoutRef.current);
     if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
@@ -290,9 +308,9 @@ const SOSModal = ({ isOpen, onClose }) => {
           <div className="sos-patient-info">
             <span className="sos-patient-avatar" style={{ background: currentPatient.color }}>
               {currentPatient.avatarUrl ? (
-                <img 
-                  src={currentPatient.avatarUrl} 
-                  alt={currentPatient.name} 
+                <img
+                  src={currentPatient.avatarUrl}
+                  alt={currentPatient.name}
                   style={{ width: '100%', height: '100%', borderRadius: '50%' }}
                 />
               ) : (
@@ -358,7 +376,7 @@ const SOSModal = ({ isOpen, onClose }) => {
               </div>
 
               <div className="sos-call-controls">
-                <button 
+                <button
                   className={`sos-control-btn ${isMuted ? 'active' : ''}`}
                   onClick={toggleMute}
                 >
@@ -366,7 +384,7 @@ const SOSModal = ({ isOpen, onClose }) => {
                   <span>{isMuted ? 'Unmute' : 'Mute'}</span>
                 </button>
 
-                <button 
+                <button
                   className="sos-control-btn end-call"
                   onClick={endCall}
                 >
@@ -374,7 +392,7 @@ const SOSModal = ({ isOpen, onClose }) => {
                   <span>End Call</span>
                 </button>
 
-                <button 
+                <button
                   className={`sos-control-btn ${!isSpeakerOn ? 'active' : ''}`}
                   onClick={() => setIsSpeakerOn(!isSpeakerOn)}
                 >

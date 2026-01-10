@@ -4948,12 +4948,12 @@ h6 {
 
 .sos-transcript-box {
   flex: 1;
-  padding: 14px;
+  padding: 18px;
   background: white;
-  border-radius: 14px;
+  border-radius: 18px;
   border: 2px solid var(--neutral-200);
   transition: all 0.3s ease;
-  min-height: 100px;
+  min-height: 160px;
   display: flex;
   flex-direction: column;
 }
@@ -5013,12 +5013,12 @@ h6 {
 }
 
 .transcript-text {
-  font-size: 0.9rem;
+  font-size: 1.15rem;
   color: var(--text-primary);
   line-height: 1.5;
   flex: 1;
   overflow-y: auto;
-  max-height: 80px;
+  max-height: 140px;
 }
 
 .sos-transcript-box.speaking .transcript-text {
