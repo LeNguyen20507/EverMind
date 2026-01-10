@@ -46,7 +46,9 @@ const defaultPatientsData = {
     stage: 'Early-Stage Alzheimer\'s',
     location: 'Portland, Oregon',
     initials: 'MT',
-    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Margaret&backgroundColor=14b8a6',
+    initials: 'MT',
+    avatarUrl: '/avatars/margaret.png',
+    color: '#14B8A6',
     color: '#14B8A6',
     diagnosis: 'Diagnosed 2024 with mild cognitive impairment progressing to early Alzheimer\'s',
     medications: [
@@ -61,6 +63,7 @@ const defaultPatientsData = {
       { name: 'Robert Thompson', relationship: 'Husband', phone: '503-555-0198' },
       { name: 'Jennifer Adams', relationship: 'Daughter', phone: '503-555-0176' }
     ],
+    reminders: [],
     favoriteSongs: [
       { title: 'Moon River', artist: 'Andy Williams', type: 'song', calming: 'very_high' },
       { title: 'Unforgettable', artist: 'Nat King Cole', type: 'song', calming: 'very_high' },
@@ -90,7 +93,9 @@ const defaultPatientsData = {
     stage: 'Moderate Alzheimer\'s',
     location: 'Boston, Massachusetts',
     initials: 'WO',
-    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=William&backgroundColor=3b82f6',
+    initials: 'WO',
+    avatarUrl: '/avatars/bill.png',
+    color: '#3B82F6', // blue
     color: '#3B82F6', // blue
     diagnosis: 'Diagnosed 2022, moderate stage with sundowning episodes',
     medications: [
@@ -105,6 +110,7 @@ const defaultPatientsData = {
       { name: 'Mary O\'Connor', relationship: 'Wife', phone: '617-555-0189' },
       { name: 'Patrick O\'Connor', relationship: 'Son', phone: '617-555-0156' }
     ],
+    reminders: [],
     favoriteSongs: [
       { title: 'Danny Boy', artist: 'Traditional Irish', type: 'song', calming: 'very_high' },
       { title: 'Sweet Caroline', artist: 'Neil Diamond', type: 'song', calming: 'high' },
@@ -134,7 +140,9 @@ const defaultPatientsData = {
     stage: 'Moderate-Severe Alzheimer\'s',
     location: 'Nashville, Tennessee',
     initials: 'DJ',
-    avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dorothy&backgroundColor=a855f7',
+    initials: 'DJ',
+    avatarUrl: '/avatars/dorothy.png',
+    color: '#A855F7', // purple
     color: '#A855F7', // purple
     diagnosis: 'Diagnosed 2020, requires assistance with daily activities',
     medications: [
@@ -150,6 +158,7 @@ const defaultPatientsData = {
       { name: 'Rev. Marcus Johnson', relationship: 'Son', phone: '615-555-0167' },
       { name: 'Lisa Johnson-Brown', relationship: 'Daughter', phone: '615-555-0145' }
     ],
+    reminders: [],
     favoriteSongs: [
       { title: 'Amazing Grace', artist: 'Traditional Hymn', type: 'song', calming: 'very_high' },
       { title: 'His Eye Is On The Sparrow', artist: 'Mahalia Jackson', type: 'song', calming: 'very_high' },
@@ -181,7 +190,7 @@ export const PatientProvider = ({ children }) => {
   const [currentPatientId, setCurrentPatientId] = useState(null);
   const [hasOnboarded, setHasOnboarded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Mood and tracking data storage
   const [moodLogs, setMoodLogs] = useState({});
   const [conversationNotes, setConversationNotes] = useState({});
@@ -249,7 +258,7 @@ export const PatientProvider = ({ children }) => {
     const id = generatePatientId();
     const colorIndex = Object.keys(patients).length % patientColors.length;
     const color = patientColors[colorIndex];
-    
+
     const newPatient = {
       id,
       name: patientData.name || 'New Patient',
@@ -272,6 +281,7 @@ export const PatientProvider = ({ children }) => {
       triggers: patientData.triggers || [],
       calmingStrategies: patientData.calmingStrategies || [],
       favoriteThings: patientData.favoriteThings || {},
+      reminders: [],
       createdAt: new Date().toISOString()
     };
 
@@ -324,10 +334,48 @@ export const PatientProvider = ({ children }) => {
     setHasOnboarded(false);
   };
 
+  // ============ REMINDER METHODS ============
+  const addReminder = (patientId, reminder) => {
+    if (patients[patientId]) {
+      const updatedPatient = {
+        ...patients[patientId],
+        reminders: [...(patients[patientId].reminders || []), reminder],
+        updatedAt: new Date().toISOString()
+      };
+      setPatients(prev => ({ ...prev, [patientId]: updatedPatient }));
+    }
+  };
+
+  const updateReminder = (patientId, reminder) => {
+    if (patients[patientId] && patients[patientId].reminders) {
+      const updatedReminders = patients[patientId].reminders.map(r =>
+        r.id === reminder.id ? reminder : r
+      );
+      const updatedPatient = {
+        ...patients[patientId],
+        reminders: updatedReminders,
+        updatedAt: new Date().toISOString()
+      };
+      setPatients(prev => ({ ...prev, [patientId]: updatedPatient }));
+    }
+  };
+
+  const deleteReminder = (patientId, reminderId) => {
+    if (patients[patientId] && patients[patientId].reminders) {
+      const updatedReminders = patients[patientId].reminders.filter(r => r.id !== reminderId);
+      const updatedPatient = {
+        ...patients[patientId],
+        reminders: updatedReminders,
+        updatedAt: new Date().toISOString()
+      };
+      setPatients(prev => ({ ...prev, [patientId]: updatedPatient }));
+    }
+  };
+
   // ============ TRACKING DATA METHODS ============
   const saveMoodLog = (patientId, date, moodData) => {
     const key = `${patientId}:${date}`;
-    const newMoodLogs = { ...moodLogs, [key]: { ...moodLogs[key], ...moodData, lastUpdated: new Date().toISOString() }};
+    const newMoodLogs = { ...moodLogs, [key]: { ...moodLogs[key], ...moodData, lastUpdated: new Date().toISOString() } };
     setMoodLogs(newMoodLogs);
     localStorage.setItem(STORAGE_KEYS.MOOD_LOGS, JSON.stringify(newMoodLogs));
   };
@@ -356,7 +404,7 @@ export const PatientProvider = ({ children }) => {
   const getConversationNotes = (patientId, date) => conversationNotes[`${patientId}:${date}`] || [];
 
   const saveEmergencyContextData = (patientId, context) => {
-    const newContext = { ...emergencyContext, [patientId]: { text: context, lastUpdated: new Date().toISOString() }};
+    const newContext = { ...emergencyContext, [patientId]: { text: context, lastUpdated: new Date().toISOString() } };
     setEmergencyContext(newContext);
     localStorage.setItem(STORAGE_KEYS.EMERGENCY_CONTEXT, JSON.stringify(newContext));
   };
@@ -380,6 +428,7 @@ export const PatientProvider = ({ children }) => {
     currentPatient, currentPatientId, patients: Object.values(patients), patientsMap: patients, isLoading,
     switchPatient, addPatient, updatePatient, deletePatient,
     hasOnboarded, completeOnboarding, skipToDemo, resetApp,
+    addReminder, updateReminder, deleteReminder,
     saveMoodLog, getMoodLog, getMoodHistory,
     saveConversationNotes, getConversationNotes,
     saveEmergencyContext: saveEmergencyContextData, getEmergencyContext: getEmergencyContextData,

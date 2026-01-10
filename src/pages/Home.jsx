@@ -5,8 +5,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { 
-  Pill, 
+import {
+  Pill,
   Activity,
   Brain,
   Plus,
@@ -33,15 +33,15 @@ import { usePatient } from '../context/PatientContext';
 
 const Home = () => {
   // Get current patient from context (synced with top-right switcher)
-  const { currentPatient } = usePatient();
+  const { currentPatient, addReminder, updateReminder, deleteReminder } = usePatient();
 
-  // State for reminders - organized by type
-  const [reminders, setReminders] = useState([]);
-  const [completedIds, setCompletedIds] = useState([]);
+  // State for reminders - derived from patient data
+  const reminders = currentPatient?.reminders || [];
+
   const [showModal, setShowModal] = useState(false);
   const [editingReminder, setEditingReminder] = useState(null);
   const [activeTab, setActiveTab] = useState('medication');
-  
+
   // Form state
   const [formData, setFormData] = useState({
     title: '',
@@ -70,7 +70,7 @@ const Home = () => {
 
   // Get reminders for current tab
   const currentTabReminders = reminders
-    .filter(r => r.type === activeTab && !completedIds.includes(r.id))
+    .filter(r => r.type === activeTab && !r.isCompleted)
     .sort((a, b) => {
       const order = { morning: 1, afternoon: 2, evening: 3 };
       if (a.isRecurring !== b.isRecurring) return b.isRecurring ? 1 : -1;
@@ -79,6 +79,7 @@ const Home = () => {
 
   // Open modal for new reminder
   const handleAddNew = () => {
+    if (!currentPatient) return;
     setEditingReminder(null);
     setFormData({ title: '', timeOfDay: 'morning', type: activeTab, isRecurring: false, note: '' });
     setShowModal(true);
@@ -100,20 +101,26 @@ const Home = () => {
   // Save reminder
   const handleSave = () => {
     if (!formData.title.trim()) return;
+    if (!currentPatient) {
+      console.error("No patient selected");
+      return;
+    }
 
     if (editingReminder) {
-      setReminders(prev => prev.map(r => 
-        r.id === editingReminder.id ? { ...r, ...formData } : r
-      ));
+      updateReminder(currentPatient.id, {
+        ...editingReminder,
+        ...formData
+      });
     } else {
       const newReminder = {
         id: Date.now(),
         ...formData,
+        isCompleted: false,
         createdAt: new Date().toISOString()
       };
-      setReminders(prev => [...prev, newReminder]);
+      addReminder(currentPatient.id, newReminder);
     }
-    
+
     setShowModal(false);
     setFormData({ title: '', timeOfDay: 'morning', type: activeTab, isRecurring: false, note: '' });
     setEditingReminder(null);
@@ -121,68 +128,59 @@ const Home = () => {
 
   // Delete reminder
   const handleDelete = (id) => {
-    setReminders(prev => prev.filter(r => r.id !== id));
-    setCompletedIds(prev => prev.filter(cid => cid !== id));
+    deleteReminder(currentPatient.id, id);
   };
 
-  // Toggle completion
-  const toggleComplete = (id) => {
-    if (completedIds.includes(id)) {
-      setCompletedIds(prev => prev.filter(cid => cid !== id));
-    } else {
-      setCompletedIds(prev => [...prev, id]);
-    }
+  // Toggle completion (mark as done)
+  const toggleComplete = (reminder) => {
+    // If it's recurring, maybe we don't delete it but just mark today as done?
+    // For now, let's just mark isCompleted = true to hide it from the list
+    updateReminder(currentPatient.id, { ...reminder, isCompleted: true });
   };
 
   // Get count for each tab
   const getTabCount = (type) => {
-    return reminders.filter(r => r.type === type && !completedIds.includes(r.id)).length;
+    return reminders.filter(r => r.type === type && !r.isCompleted).length;
   };
 
   return (
     <div className="home-page">
       {/* Patient Basic Info - From Current Patient Context */}
       <div className="patient-header-simple">
-        <h1 className="patient-name-lg">
-          {currentPatient ? currentPatient.name : 'Select a Patient'}
-        </h1>
-        {currentPatient && (
-          <span className="patient-meta">
-            {currentPatient.avatarUrl ? (
-              <img 
-                src={currentPatient.avatarUrl} 
-                alt={currentPatient.name} 
-                style={{ 
-                  width: '24px', 
-                  height: '24px', 
-                  borderRadius: '50%', 
-                  verticalAlign: 'middle',
-                  marginRight: '6px',
-                  border: `2px solid ${currentPatient.color}`
-                }} 
-              />
-            ) : (
-              <span 
-                style={{ 
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: currentPatient.color,
-                  color: 'white',
-                  fontSize: '0.65rem',
-                  fontWeight: '700',
-                  lineHeight: '24px',
-                  textAlign: 'center',
-                  marginRight: '6px',
-                  verticalAlign: 'middle'
-                }}
-              >
-                {currentPatient.initials}
-              </span>
-            )}
-            Age {currentPatient.age} • "{currentPatient.preferredName}" • {currentPatient.stage}
-          </span>
+        {currentPatient ? (
+          <>
+            <div className="patient-avatar-container">
+              {currentPatient.avatarUrl ? (
+                <img
+                  src={currentPatient.avatarUrl}
+                  alt={currentPatient.name}
+                  className="patient-avatar-lg"
+                  style={{ borderColor: currentPatient.color }}
+                />
+              ) : (
+                <div
+                  className="patient-avatar-placeholder-lg"
+                  style={{ background: currentPatient.color }}
+                >
+                  {currentPatient.initials}
+                </div>
+              )}
+            </div>
+
+            <h1 className="patient-name-lg">
+              {currentPatient.name}
+            </h1>
+
+            <p className="patient-meta-lg">
+              <span className="meta-item">Age {currentPatient.age}</span>
+              <span className="meta-separator">•</span>
+              <span className="meta-item">"{currentPatient.preferredName}"</span>
+              <span className="meta-separator">•</span>
+              <span className="meta-item">{currentPatient.stage}</span>
+            </p>
+          </>
+        ) : (
+          <h1 className="patient-select-prompt">Select a Patient</h1>
         )}
       </div>
 
@@ -210,9 +208,11 @@ const Home = () => {
           <div className="card-header reminders-header">
             <Brain size={16} />
             <span>Today's Schedule</span>
-            <button className="add-reminder-btn" onClick={handleAddNew}>
-              <Plus size={14} />
-            </button>
+            {currentPatient && (
+              <button className="add-reminder-btn" onClick={handleAddNew}>
+                <Plus size={14} />
+              </button>
+            )}
           </div>
 
           {/* Reminder Type Tabs */}
@@ -224,7 +224,7 @@ const Home = () => {
                   key={id}
                   className={`reminder-tab ${activeTab === id ? 'active' : ''}`}
                   onClick={() => setActiveTab(id)}
-                  style={{ 
+                  style={{
                     '--tab-color': color,
                     borderColor: activeTab === id ? color : 'transparent'
                   }}
@@ -255,12 +255,12 @@ const Home = () => {
                 {currentTabReminders.map((reminder) => {
                   const typeInfo = getTypeInfo(reminder.type);
                   const timeLabel = timeOfDayOptions.find(t => t.id === reminder.timeOfDay);
-                  
+
                   return (
                     <div key={reminder.id} className="reminder-item-row">
-                      <button 
+                      <button
                         className="reminder-checkbox"
-                        onClick={() => toggleComplete(reminder.id)}
+                        onClick={() => toggleComplete(reminder)}
                         style={{ borderColor: typeInfo.color }}
                       />
                       <div className="reminder-item-content">
@@ -322,6 +322,7 @@ const Home = () => {
                   {timeOfDayOptions.map(({ id, label, icon: Icon, color }) => (
                     <button
                       key={id}
+                      type="button"
                       className={`time-of-day-option ${formData.timeOfDay === id ? 'active' : ''}`}
                       onClick={() => setFormData(prev => ({ ...prev, timeOfDay: id }))}
                       style={{ '--time-color': color }}
@@ -341,9 +342,10 @@ const Home = () => {
                   {reminderTypes.map(({ id, label, icon: Icon, color }) => (
                     <button
                       key={id}
+                      type="button"
                       className={`type-option ${formData.type === id ? 'active' : ''}`}
                       onClick={() => setFormData(prev => ({ ...prev, type: id }))}
-                      style={{ 
+                      style={{
                         borderColor: formData.type === id ? color : 'transparent',
                         background: formData.type === id ? `${color}10` : 'var(--neutral-100)'
                       }}
@@ -373,22 +375,24 @@ const Home = () => {
                   value={formData.note}
                   onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
                   rows={2}
+                  onKeyDown={e => e.stopPropagation()}
                 />
               </div>
-            </div>
 
-            <div className="modal-footer">
-              <button className="btn-cancel" onClick={() => setShowModal(false)}>
-                Cancel
-              </button>
-              <button 
-                className="btn-save" 
-                onClick={handleSave}
-                disabled={!formData.title.trim()}
-              >
-                <Save size={18} />
-                {editingReminder ? 'Update' : 'Save'}
-              </button>
+              <div className="modal-footer">
+                <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn-save"
+                  onClick={handleSave}
+                  disabled={!formData.title.trim()}
+                >
+                  <Save size={18} />
+                  {editingReminder ? 'Update' : 'Save'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

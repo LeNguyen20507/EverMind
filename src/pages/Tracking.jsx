@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { 
+import {
   Smile,
   ChevronLeft,
   ChevronRight,
@@ -33,7 +33,8 @@ import {
   getConversationNotes,
   deleteConversationNote,
   saveEmergencyContext,
-  getEmergencyContext
+  getEmergencyContext,
+  deleteMoodLog
 } from '../utils/activityTracker';
 
 // Mood options with emojis
@@ -72,7 +73,7 @@ const Tracking = () => {
   // Date navigation
   const [currentDate, setCurrentDate] = useState(new Date());
   const dateStr = currentDate.toISOString().split('T')[0];
-  
+
   // Mood state
   const [selectedMood, setSelectedMood] = useState(null);
   const [quickNote, setQuickNote] = useState('');
@@ -100,10 +101,10 @@ const Tracking = () => {
   const loadDateData = () => {
     const moods = getMoodsForDate(patientId, dateStr);
     setTodaysMoods(moods);
-    
+
     const notes = getConversationNotes(patientId, dateStr);
     setConversationNotes(notes);
-    
+
     // Reset selections when changing dates
     setSelectedMood(null);
     setQuickNote('');
@@ -139,13 +140,13 @@ const Tracking = () => {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     if (dateStr === today.toISOString().split('T')[0]) {
-      return `Today - ${currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}`;
+      return `Today, ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
     } else if (dateStr === yesterday.toISOString().split('T')[0]) {
-      return `Yesterday - ${currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}`;
+      return `Yesterday, ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
     }
-    return currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    return currentDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
 
   // Mood handling
@@ -168,7 +169,7 @@ const Tracking = () => {
     setSelectedMood(null);
     setQuickNote('');
     setShowMoodSaved(true);
-    
+
     // Refresh history
     loadMoodHistory();
 
@@ -183,10 +184,10 @@ const Tracking = () => {
   };
 
   const formatMoodTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
+    return new Date(timestamp).toLocaleTimeString('en-US', {
+      hour: 'numeric',
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     });
   };
 
@@ -244,6 +245,12 @@ const Tracking = () => {
     return 'mood-difficult-bg';
   };
 
+  const handleDeleteMood = (moodId) => {
+    deleteMoodLog(patientId, dateStr, moodId);
+    setTodaysMoods(prev => prev.filter(m => m.id !== moodId));
+    loadMoodHistory(); // Refresh history grid
+  };
+
   return (
     <div className="tracking-page">
       {/* SECTION 1: Quick Mood Log */}
@@ -261,14 +268,14 @@ const Tracking = () => {
             <ChevronLeft size={20} />
             <span>Yesterday</span>
           </button>
-          
+
           <div className="current-date-display">
             <Calendar size={16} />
             <span>{formatDateDisplay()}</span>
           </div>
-          
-          <button 
-            className="date-nav-btn" 
+
+          <button
+            className="date-nav-btn"
             onClick={goToNextDay}
             disabled={isToday()}
           >
@@ -289,6 +296,13 @@ const Tracking = () => {
                     <span className="timeline-time">{entry.timeOfDay}:</span>
                     <span className="timeline-emoji">{mood?.emoji}</span>
                     {entry.note && <span className="timeline-note">"{entry.note}"</span>}
+                    <button
+                      className="delete-note-btn"
+                      onClick={() => handleDeleteMood(entry.id)}
+                      style={{ marginLeft: '4px', width: '20px', height: '20px' }}
+                    >
+                      <Trash2 size={12} />
+                    </button>
                   </div>
                 );
               })}
@@ -303,9 +317,9 @@ const Tracking = () => {
               key={mood.id}
               className={`mood-btn ${selectedMood?.id === mood.id ? 'selected' : ''}`}
               onClick={() => handleMoodSelect(mood)}
-              style={{ 
+              style={{
                 '--mood-color': mood.color,
-                '--mood-bg': mood.bgColor 
+                '--mood-bg': mood.bgColor
               }}
             >
               <span className="mood-emoji">{mood.emoji}</span>
@@ -328,7 +342,7 @@ const Tracking = () => {
 
         {/* Save Button */}
         <div className="mood-actions">
-          <button 
+          <button
             className="save-mood-btn"
             onClick={handleSaveMood}
             disabled={!selectedMood}
@@ -377,28 +391,47 @@ const Tracking = () => {
 
         {/* Add New Note */}
         <div className="add-note-form">
-          <div className="note-input-wrapper">
+          <div className="note-input-wrapper" style={{ position: 'relative' }}>
             <textarea
               ref={noteInputRef}
               value={newNoteText}
               onChange={(e) => setNewNoteText(e.target.value.slice(0, 500))}
-              placeholder={selectedTag === 'emergency' 
-                ? "Important info for doctors or responders..." 
+              placeholder={selectedTag === 'emergency'
+                ? "Important info for doctors or responders..."
                 : `What did you observe or talk about with ${patientName}?`
               }
               className="note-input"
               rows={3}
+              style={{ paddingRight: '50px' }}
             />
-            <button 
-              className={`voice-btn ${isRecording ? 'recording' : ''}`}
+            <button
+              className={`voice-input-btn ${isRecording ? 'recording' : ''}`}
               onClick={toggleRecording}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                bottom: '10px',
+                width: '36px',
+                height: '36px',
+                marginBottom: '0',
+                background: isRecording ? 'var(--accent-error)' : 'var(--neutral-100)',
+                color: isRecording ? 'white' : 'var(--text-secondary)',
+                border: 'none',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                zIndex: 10
+              }}
             >
               {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
             </button>
           </div>
           <div className="note-actions">
             <span className="char-count">{newNoteText.length}/500</span>
-            <button 
+            <button
               className="add-note-btn"
               onClick={handleAddNote}
               disabled={!newNoteText.trim()}
@@ -420,7 +453,7 @@ const Tracking = () => {
 
         {/* Conversation Prompts */}
         <div className="prompts-section">
-          <button 
+          <button
             className="prompts-toggle"
             onClick={() => setShowPrompts(!showPrompts)}
           >
@@ -428,11 +461,11 @@ const Tracking = () => {
             Conversation ideas
             {showPrompts ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
-          
+
           {showPrompts && (
             <div className="prompts-list">
               {CONVERSATION_PROMPTS.map((prompt, idx) => (
-                <button 
+                <button
                   key={idx}
                   className="prompt-chip"
                   onClick={() => handlePromptClick(prompt)}
@@ -462,7 +495,7 @@ const Tracking = () => {
                       <Clock size={12} />
                       {formatMoodTime(note.timestamp)}
                     </span>
-                    <button 
+                    <button
                       className="delete-note-btn"
                       onClick={() => handleDeleteNote(note.id)}
                     >
@@ -491,7 +524,7 @@ const Tracking = () => {
           {moodHistory.map((day, idx) => {
             const mood = day.predominantMood ? MOODS.find(m => m.id === day.predominantMood) : null;
             return (
-              <div 
+              <div
                 key={idx}
                 className={`history-day-card ${getMoodBgClass(day.predominantMood)}`}
                 onClick={() => setCurrentDate(new Date(day.date))}

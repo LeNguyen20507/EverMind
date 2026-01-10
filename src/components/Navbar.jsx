@@ -29,39 +29,51 @@ const Navbar = () => {
       {/* Global Top Navigation Bar - Fixed */}
       <nav className="global-top-nav">
         {/* LEFT: Emergency Button with Label */}
-        <button 
-          className="emergency-btn-with-label" 
+        <button
+          className="emergency-btn-with-label"
           onClick={() => setShowSOSModal(true)}
           aria-label="Emergency"
         >
           <AlertCircle size={20} />
-          <span>SOS</span>
+          <span>Help</span>
         </button>
 
         {/* CENTER: App Logo */}
         <div className="nav-center">
-          <img src="/assets/name.svg" alt="EverMind" className="app-logo" />
+          <span className="app-logo-text" style={{
+            fontSize: '1.5rem',
+            fontWeight: '800',
+            letterSpacing: '-0.02em',
+            fontFamily: 'var(--font-sans, inherit)',
+            background: 'linear-gradient(135deg, var(--primary-600) 0%, var(--blue-600) 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            color: 'transparent'
+          }}>
+            EverMind
+          </span>
         </div>
 
         {/* RIGHT: Patient Switcher Button */}
-        <button 
-          className="patient-switcher-btn" 
+        <button
+          className="patient-switcher-btn"
           onClick={() => setShowPatientSwitcher(true)}
           aria-label="Switch Patient"
           title={`Current: ${currentPatient?.preferredName || 'Select Patient'}`}
           style={{ '--patient-color': currentPatient?.color || '#14B8A6' }}
         >
-          <div 
+          <div
             className="patient-avatar-btn"
-            style={{ 
+            style={{
               background: currentPatient?.color,
-              borderColor: currentPatient?.color 
+              borderColor: currentPatient?.color
             }}
           >
             {currentPatient?.avatarUrl ? (
-              <img 
-                src={currentPatient.avatarUrl} 
-                alt={currentPatient.name} 
+              <img
+                src={currentPatient.avatarUrl}
+                alt={currentPatient.name}
                 className="patient-avatar-img"
               />
             ) : (
@@ -92,7 +104,7 @@ const Navbar = () => {
       </nav>
 
       {/* SOS Modal - AI-powered calming assistant */}
-      <SOSModal 
+      <SOSModal
         isOpen={showSOSModal}
         onClose={() => setShowSOSModal(false)}
       />

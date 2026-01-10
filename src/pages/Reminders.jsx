@@ -5,11 +5,11 @@
  */
 
 import { useState } from 'react';
-import { 
-  Bell, 
-  Plus, 
-  Pill, 
-  Calendar, 
+import {
+  Bell,
+  Plus,
+  Pill,
+  Calendar,
   Utensils,
   Activity,
   Clock,
@@ -27,7 +27,7 @@ const Reminders = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingReminder, setEditingReminder] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
-  
+
   // Form state
   const [formData, setFormData] = useState({
     title: '',
@@ -80,8 +80,8 @@ const Reminders = () => {
 
     if (editingReminder) {
       // Update existing
-      setReminders(prev => prev.map(r => 
-        r.id === editingReminder.id 
+      setReminders(prev => prev.map(r =>
+        r.id === editingReminder.id
           ? { ...r, ...formData }
           : r
       ));
@@ -94,7 +94,7 @@ const Reminders = () => {
       };
       setReminders(prev => [...prev, newReminder]);
     }
-    
+
     setShowModal(false);
     setFormData({ title: '', time: '', type: 'medication', note: '' });
     setEditingReminder(null);
@@ -121,7 +121,7 @@ const Reminders = () => {
     : reminders.filter(r => r.type === activeFilter);
 
   // Sort by time
-  const sortedReminders = [...filteredReminders].sort((a, b) => 
+  const sortedReminders = [...filteredReminders].sort((a, b) =>
     a.time.localeCompare(b.time)
   );
 
@@ -160,26 +160,26 @@ const Reminders = () => {
             <h2 className="section-label today">TODAY</h2>
             <span className="reminder-count">{pendingReminders.length} pending</span>
           </div>
-          
+
           <div className="reminders-list">
             {pendingReminders.map((reminder) => {
               const typeInfo = getTypeInfo(reminder.type);
               const Icon = typeInfo.icon;
-              
+
               return (
                 <div key={reminder.id} className="reminder-card">
-                  <button 
+                  <button
                     className="complete-checkbox"
                     onClick={() => toggleComplete(reminder.id)}
                     style={{ borderColor: typeInfo.color }}
                   >
                   </button>
-                  
+
                   <div className="reminder-main">
                     <div className="reminder-header">
                       <span className="reminder-time">{reminder.time}</span>
-                      <div 
-                        className="reminder-type-badge" 
+                      <div
+                        className="reminder-type-badge"
                         style={{ background: `${typeInfo.color}15`, color: typeInfo.color }}
                       >
                         <Icon size={12} />
@@ -192,13 +192,13 @@ const Reminders = () => {
                   </div>
 
                   <div className="reminder-actions">
-                    <button 
+                    <button
                       className="action-btn edit"
                       onClick={() => handleEdit(reminder)}
                     >
                       <Edit3 size={16} />
                     </button>
-                    <button 
+                    <button
                       className="action-btn delete"
                       onClick={() => handleDelete(reminder.id)}
                     >
@@ -219,27 +219,27 @@ const Reminders = () => {
             <h2 className="section-label completed">COMPLETED</h2>
             <span className="reminder-count">{completedReminders.length} done</span>
           </div>
-          
+
           <div className="reminders-list">
             {completedReminders.map((reminder) => {
               const typeInfo = getTypeInfo(reminder.type);
               const Icon = typeInfo.icon;
-              
+
               return (
                 <div key={reminder.id} className="reminder-card completed">
-                  <button 
+                  <button
                     className="complete-checkbox checked"
                     onClick={() => toggleComplete(reminder.id)}
                     style={{ borderColor: typeInfo.color, background: typeInfo.color }}
                   >
                     <Check size={14} color="white" />
                   </button>
-                  
+
                   <div className="reminder-main">
                     <div className="reminder-header">
                       <span className="reminder-time">{reminder.time}</span>
-                      <div 
-                        className="reminder-type-badge" 
+                      <div
+                        className="reminder-type-badge"
                         style={{ background: `${typeInfo.color}15`, color: typeInfo.color }}
                       >
                         <Icon size={12} />
@@ -249,7 +249,7 @@ const Reminders = () => {
                   </div>
 
                   <div className="reminder-actions">
-                    <button 
+                    <button
                       className="action-btn delete"
                       onClick={() => handleDelete(reminder.id)}
                     >
@@ -279,7 +279,7 @@ const Reminders = () => {
               </button>
             </div>
 
-            <div className="modal-body">
+            <form className="modal-body" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
               {/* Title Input */}
               <div className="form-group">
                 <label>Title</label>
@@ -308,9 +308,10 @@ const Reminders = () => {
                   {reminderTypes.map(({ id, label, icon: Icon, color }) => (
                     <button
                       key={id}
+                      type="button"
                       className={`type-option ${formData.type === id ? 'active' : ''}`}
                       onClick={() => setFormData(prev => ({ ...prev, type: id }))}
-                      style={{ 
+                      style={{
                         borderColor: formData.type === id ? color : 'transparent',
                         background: formData.type === id ? `${color}10` : 'var(--neutral-100)'
                       }}
@@ -330,23 +331,24 @@ const Reminders = () => {
                   value={formData.note}
                   onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
                   rows={3}
+                  onKeyDown={e => e.stopPropagation()} // Allow enter in textarea without submitting
                 />
               </div>
-            </div>
 
-            <div className="modal-footer">
-              <button className="btn-cancel" onClick={() => setShowModal(false)}>
-                Cancel
-              </button>
-              <button 
-                className="btn-save" 
-                onClick={handleSave}
-                disabled={!formData.title.trim() || !formData.time.trim()}
-              >
-                <Save size={18} />
-                {editingReminder ? 'Update' : 'Save'}
-              </button>
-            </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-save"
+                  disabled={!formData.title.trim() || !formData.time.trim()}
+                >
+                  <Save size={18} />
+                  {editingReminder ? 'Update' : 'Save'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

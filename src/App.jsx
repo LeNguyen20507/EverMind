@@ -29,7 +29,7 @@ function App() {
     <div className="app-container">
       {/* Global Navigation Bar - Always visible at top */}
       <Navbar />
-      
+
       {/* Main Routes */}
       <Routes>
         <Route path="/" element={<Home />} />

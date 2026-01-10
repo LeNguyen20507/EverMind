@@ -20,7 +20,7 @@ const STORAGE_KEYS = {
  */
 export const trackActivity = (type, metadata, patientId = 'default') => {
   const activities = getStoredData(STORAGE_KEYS.ACTIVITIES) || [];
-  
+
   const activity = {
     id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     type,
@@ -29,15 +29,15 @@ export const trackActivity = (type, metadata, patientId = 'default') => {
     date: new Date().toLocaleDateString(),
     timestamp: new Date().toISOString()
   };
-  
+
   activities.unshift(activity);
-  
+
   // Keep last 100 activities per patient
   const filteredActivities = activities.filter(a => a.patientId === patientId).slice(0, 100);
   const otherActivities = activities.filter(a => a.patientId !== patientId);
-  
+
   setStoredData(STORAGE_KEYS.ACTIVITIES, [...filteredActivities, ...otherActivities]);
-  
+
   return activity;
 };
 
@@ -50,7 +50,7 @@ export const getRecentActivities = (days = 7, patientId = 'default') => {
   const activities = getStoredData(STORAGE_KEYS.ACTIVITIES) || [];
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - days);
-  
+
   return activities
     .filter(a => a.patientId === patientId)
     .filter(a => new Date(a.timestamp) >= cutoffDate)
@@ -68,24 +68,24 @@ export const getRecentActivities = (days = 7, patientId = 'default') => {
 export const logMood = (patientId, date, moodData) => {
   const key = `${STORAGE_KEYS.MOODS}:${patientId}`;
   const allMoods = getStoredData(key) || {};
-  
+
   // Get existing moods for this date or create new array
   const dayMoods = allMoods[date] || [];
-  
+
   const entry = {
     id: `mood_${Date.now()}`,
     ...moodData,
     loggedAt: moodData.loggedAt || new Date().toISOString()
   };
-  
+
   dayMoods.push(entry);
   allMoods[date] = dayMoods;
-  
+
   setStoredData(key, allMoods);
-  
+
   // Also track as activity for MCP
   trackActivity('MOOD_CHECKIN', { mood: moodData.mood, note: moodData.note, date }, patientId);
-  
+
   return entry;
 };
 
@@ -104,20 +104,20 @@ export const getMoodsForDate = (patientId, date) => {
 export const getMoodHistory = (patientId, days = 7) => {
   const key = `${STORAGE_KEYS.MOODS}:${patientId}`;
   const allMoods = getStoredData(key) || {};
-  
+
   const history = [];
   const today = new Date();
-  
+
   for (let i = 0; i < days; i++) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     const dateStr = formatDate(date);
-    
+
     const dayMoods = allMoods[dateStr] || [];
-    
+
     // Get predominant mood for the day
     const predominantMood = getPredominantMood(dayMoods);
-    
+
     history.push({
       date: dateStr,
       displayDate: formatDisplayDate(date),
@@ -127,7 +127,7 @@ export const getMoodHistory = (patientId, days = 7) => {
       moodCount: dayMoods.length
     });
   }
-  
+
   return history;
 };
 
@@ -137,11 +137,24 @@ export const getMoodHistory = (patientId, days = 7) => {
 export const updateMood = (patientId, date, moodId, updates) => {
   const key = `${STORAGE_KEYS.MOODS}:${patientId}`;
   const allMoods = getStoredData(key) || {};
-  
+
   if (allMoods[date]) {
-    allMoods[date] = allMoods[date].map(m => 
+    allMoods[date] = allMoods[date].map(m =>
       m.id === moodId ? { ...m, ...updates } : m
     );
+    setStoredData(key, allMoods);
+  }
+};
+
+/**
+ * Delete a mood entry
+ */
+export const deleteMoodLog = (patientId, date, moodId) => {
+  const key = `${STORAGE_KEYS.MOODS}:${patientId}`;
+  const allMoods = getStoredData(key) || {};
+
+  if (allMoods[date]) {
+    allMoods[date] = allMoods[date].filter(m => m.id !== moodId);
     setStoredData(key, allMoods);
   }
 };
@@ -154,23 +167,23 @@ export const updateMood = (patientId, date, moodId, updates) => {
 export const addConversationNote = (patientId, date, noteData) => {
   const key = `${STORAGE_KEYS.CONVERSATIONS}:${patientId}`;
   const allNotes = getStoredData(key) || {};
-  
+
   const dayNotes = allNotes[date] || [];
-  
+
   const entry = {
     id: `conv_${Date.now()}`,
     ...noteData,
     timestamp: noteData.timestamp || new Date().toISOString()
   };
-  
+
   dayNotes.push(entry);
   allNotes[date] = dayNotes;
-  
+
   setStoredData(key, allNotes);
-  
+
   // Track as activity
   trackActivity('CONVERSATION_NOTE', { note: noteData.text, date }, patientId);
-  
+
   return entry;
 };
 
@@ -189,7 +202,7 @@ export const getConversationNotes = (patientId, date) => {
 export const deleteConversationNote = (patientId, date, noteId) => {
   const key = `${STORAGE_KEYS.CONVERSATIONS}:${patientId}`;
   const allNotes = getStoredData(key) || {};
-  
+
   if (allNotes[date]) {
     allNotes[date] = allNotes[date].filter(n => n.id !== noteId);
     setStoredData(key, allNotes);
@@ -202,9 +215,9 @@ export const deleteConversationNote = (patientId, date, noteId) => {
 export const updateConversationNote = (patientId, date, noteId, updates) => {
   const key = `${STORAGE_KEYS.CONVERSATIONS}:${patientId}`;
   const allNotes = getStoredData(key) || {};
-  
+
   if (allNotes[date]) {
-    allNotes[date] = allNotes[date].map(n => 
+    allNotes[date] = allNotes[date].map(n =>
       n.id === noteId ? { ...n, ...updates } : n
     );
     setStoredData(key, allNotes);
@@ -218,18 +231,18 @@ export const updateConversationNote = (patientId, date, noteId, updates) => {
  */
 export const saveEmergencyContext = (patientId, contextData) => {
   const key = `${STORAGE_KEYS.EMERGENCY_CONTEXT}:${patientId}`;
-  
+
   const entry = {
     text: contextData.text,
     tags: contextData.tags || [],
     lastUpdated: new Date().toISOString()
   };
-  
+
   setStoredData(key, entry);
-  
+
   // Track as activity
   trackActivity('EMERGENCY_CONTEXT_UPDATED', { preview: contextData.text?.slice(0, 50) }, patientId);
-  
+
   return entry;
 };
 
@@ -251,11 +264,11 @@ export const getMCPTrackingData = (patientId) => {
   const moodHistory = getMoodHistory(patientId, 14); // Last 2 weeks
   const emergencyContext = getEmergencyContext(patientId);
   const recentActivities = getRecentActivities(7, patientId);
-  
+
   // Get recent conversation notes
   const convKey = `${STORAGE_KEYS.CONVERSATIONS}:${patientId}`;
   const allConversations = getStoredData(convKey) || {};
-  
+
   // Get last 3 days of conversation notes
   const recentConversations = [];
   const today = new Date();
@@ -268,10 +281,10 @@ export const getMCPTrackingData = (patientId) => {
       recentConversations.push({ date: dateStr, notes });
     }
   }
-  
+
   // Calculate simple stats
   const moodStats = calculateMoodStats(moodHistory);
-  
+
   return {
     patientId,
     exportedAt: new Date().toISOString(),
@@ -311,7 +324,7 @@ const formatDisplayDate = (date) => {
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  
+
   if (formatDate(date) === formatDate(today)) {
     return 'Today';
   } else if (formatDate(date) === formatDate(yesterday)) {
@@ -323,42 +336,42 @@ const formatDisplayDate = (date) => {
 
 const getPredominantMood = (moods) => {
   if (!moods || moods.length === 0) return null;
-  
+
   // Count occurrences
   const counts = {};
   moods.forEach(m => {
     counts[m.mood] = (counts[m.mood] || 0) + 1;
   });
-  
+
   // Find most frequent
   let maxCount = 0;
   let predominant = null;
-  
+
   Object.entries(counts).forEach(([mood, count]) => {
     if (count > maxCount) {
       maxCount = count;
       predominant = mood;
     }
   });
-  
+
   return predominant;
 };
 
 const calculateMoodStats = (history) => {
   const moodCounts = { great: 0, good: 0, okay: 0, difficult: 0, very_hard: 0 };
   let totalDays = 0;
-  
+
   history.forEach(day => {
     if (day.predominantMood) {
       moodCounts[day.predominantMood] = (moodCounts[day.predominantMood] || 0) + 1;
       totalDays++;
     }
   });
-  
+
   // Calculate streaks
   let currentStreak = 0;
   let longestGoodStreak = 0;
-  
+
   for (const day of history) {
     if (day.predominantMood === 'great' || day.predominantMood === 'good') {
       currentStreak++;
@@ -367,7 +380,7 @@ const calculateMoodStats = (history) => {
       currentStreak = 0;
     }
   }
-  
+
   return {
     totalDaysLogged: totalDays,
     moodCounts,
@@ -385,6 +398,7 @@ export default {
   getMoodsForDate,
   getMoodHistory,
   updateMood,
+  deleteMoodLog,
   addConversationNote,
   getConversationNotes,
   deleteConversationNote,

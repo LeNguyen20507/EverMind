@@ -1,12 +1,12 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Phone, 
-  PhoneOff, 
-  Mic, 
-  MicOff, 
-  Loader, 
+import {
+  Phone,
+  PhoneOff,
+  Mic,
+  MicOff,
+  Loader,
   AlertCircle,
   CheckCircle,
   User,
@@ -18,11 +18,11 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { 
-  vapi, 
-  createPersonalizedAssistant, 
+import {
+  vapi,
+  createPersonalizedAssistant,
   checkMicrophonePermission,
-  isVapiConfigured 
+  isVapiConfigured
 } from '../utils/vapiClient';
 import { fetchPatientProfile, initMcpClient } from '../utils/mcpClient';
 import { profiles } from '../utils/profiles';
@@ -51,14 +51,14 @@ const ERROR_TYPE = {
 
 const VoiceSession = () => {
   const navigate = useNavigate();
-  
+
   // Session state
   const [phase, setPhase] = useState(PHASE.SELECT_PROFILE);
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState(null);
   const [errorType, setErrorType] = useState(null);
   const [micPermission, setMicPermission] = useState(null);
-  
+
   // Call state
   const [exchangeCount, setExchangeCount] = useState(0);
   const [transcript, setTranscript] = useState([]);
@@ -72,13 +72,13 @@ const VoiceSession = () => {
   const [statusText, setStatusText] = useState(null); // For Processing.../Listening... text
   const [lastAiMessage, setLastAiMessage] = useState(''); // Track last AI message for silence prompts
   const [silenceCount, setSilenceCount] = useState(0); // Track how many times we've prompted due to silence
-  
+
   // Refs
   const timerRef = useRef(null);
   const transcriptRef = useRef(null);
   const silenceTimerRef = useRef(null);
   const isConfigured = isVapiConfigured();
-  
+
   // Caring prompts that escalate with compassion
   const caringPrompts = [
     "Take your time, I'm right here with you. There's no rush at all.",
@@ -99,7 +99,7 @@ const VoiceSession = () => {
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
     }
-    
+
     // Only start silence timer during active call
     if (phase === PHASE.ACTIVE_CALL && speakingIndicator !== 'ai') {
       silenceTimerRef.current = setTimeout(() => {
@@ -107,7 +107,7 @@ const VoiceSession = () => {
         setSilenceCount(prev => {
           const newCount = Math.min(prev + 1, caringPrompts.length - 1);
           const caringMessage = caringPrompts[newCount];
-          
+
           // Add caring prompt to transcript
           setTranscript(prevTranscript => [
             ...prevTranscript,
@@ -119,17 +119,17 @@ const VoiceSession = () => {
               isCaringPrompt: true
             }
           ]);
-          
+
           // Use VAPI to speak the caring message
           try {
             vapi.say(caringMessage);
           } catch (err) {
             console.warn('[VoiceSession] Could not speak caring prompt:', err);
           }
-          
+
           return newCount;
         });
-        
+
         // Set up next silence check (escalate every 7 seconds)
         resetSilenceTimer();
       }, 7000); // 7 seconds of silence
@@ -141,7 +141,7 @@ const VoiceSession = () => {
     if (phase === PHASE.ACTIVE_CALL && speakingIndicator === null) {
       resetSilenceTimer();
     }
-    
+
     return () => {
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
@@ -166,7 +166,7 @@ const VoiceSession = () => {
       setSpeakingIndicator(null);
       setSilenceCount(0);
       setStatusText('Listening...');
-      
+
       timerRef.current = setInterval(() => {
         setCallDuration(prev => prev + 1);
       }, 1000);
@@ -174,17 +174,17 @@ const VoiceSession = () => {
 
     const handleCallEnd = () => {
       console.log('[VAPI] Call ended');
-      
+
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
-      
+
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = null;
       }
-      
+
       setStatusText(null);
       setCallEndTime(new Date());
       setPhase(PHASE.ENDING_CALL);
@@ -195,7 +195,7 @@ const VoiceSession = () => {
       console.log('[VAPI] AI speaking...');
       setSpeakingIndicator('ai');
       setStatusText('Processing...');
-      
+
       // Clear silence timer while AI is speaking
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
@@ -212,7 +212,7 @@ const VoiceSession = () => {
     // Only show FINAL transcripts to avoid sensitivity
     const handleMessage = (message) => {
       console.log('[VAPI] Message:', message);
-      
+
       if (message.type === 'transcript' && message.transcript) {
         // When user speaks, just reset silence timer (don't show their text)
         if (message.role === 'user' && message.transcriptType === 'final') {
@@ -222,17 +222,17 @@ const VoiceSession = () => {
             clearTimeout(silenceTimerRef.current);
           }
         }
-        
+
         // ONLY add AI (assistant) final transcripts to the display
         if (message.transcriptType === 'final' && message.role === 'assistant') {
           setTranscript(prev => {
-            const exists = prev.some(t => 
-              t.text === message.transcript && 
+            const exists = prev.some(t =>
+              t.text === message.transcript &&
               t.role === message.role &&
               t.isFinal
             );
             if (exists) return prev;
-            
+
             return [...prev, {
               role: message.role,
               text: message.transcript,
@@ -240,12 +240,12 @@ const VoiceSession = () => {
               isFinal: true
             }];
           });
-          
+
           setExchangeCount(prev => Math.min(prev + 1, 3));
           setLastAiMessage(message.transcript);
         }
       }
-      
+
       if (message.type === 'function-call' && message.functionCall) {
         const { name, parameters } = message.functionCall;
         if (name === 'end_conversation') {
@@ -256,22 +256,22 @@ const VoiceSession = () => {
 
     const handleError = (err) => {
       console.error('[VAPI] Error:', err);
-      
+
       let errorMsg = 'An error occurred during the call';
       if (typeof err === 'string') errorMsg = err;
       else if (err?.message) errorMsg = err.message;
       else if (err?.error?.message) errorMsg = err.error.message;
-      
+
       if (phase === PHASE.ACTIVE_CALL) {
         setErrorType(ERROR_TYPE.CALL_DROPPED);
         errorMsg = 'The call was disconnected. This may be due to internet connection issues.';
       } else {
         setErrorType(ERROR_TYPE.VAPI_CONNECTION);
       }
-      
+
       setError(String(errorMsg));
       setPhase(PHASE.ERROR);
-      
+
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -307,7 +307,7 @@ const VoiceSession = () => {
     setPhase(PHASE.LOADING_PROFILE);
     setError(null);
     setErrorType(null);
-    
+
     try {
       let profileData;
       try {
@@ -317,7 +317,7 @@ const VoiceSession = () => {
         profileData = profiles[patientId];
         if (!profileData) throw new Error(`Profile not found: ${patientId}`);
       }
-      
+
       setProfile(profileData);
       setPhase(PHASE.PRE_CALL);
     } catch (err) {
@@ -354,11 +354,15 @@ const VoiceSession = () => {
       setExchangeCount(0);
       setPatientState(null);
       setCallEndTime(null);
-      
+
       const assistant = createPersonalizedAssistant(profile);
+      console.log('[VoiceSession] Starting Vapi with config:', assistant);
       await vapi.start(assistant);
     } catch (err) {
-      setError('Unable to start voice session. Please try again.');
+      console.error('[VoiceSession] Failed to start Vapi:', err);
+      // Show actual error message for debugging
+      const errorMessage = err.message || err.toString();
+      setError(`Connection failed: ${errorMessage}`);
       setErrorType(ERROR_TYPE.VAPI_CONNECTION);
       setPhase(PHASE.ERROR);
     }
@@ -444,7 +448,7 @@ const VoiceSession = () => {
         <h1 className="vs-title">Grounding Companion</h1>
         <p className="vs-subtitle">Compassionate AI for Alzheimer's Care</p>
       </div>
-      
+
       <div className="vs-profile-cards">
         <button className="vs-profile-card" onClick={() => handleSelectProfile('margaret_chen')}>
           <div className="vs-avatar vs-avatar-margaret">
@@ -453,7 +457,7 @@ const VoiceSession = () => {
           <h3 className="vs-card-name">Margaret Chen</h3>
           <p className="vs-card-age">78 years old</p>
           <p className="vs-card-desc">
-            Retired elementary school teacher who taught 2nd grade for 35 years. 
+            Retired elementary school teacher who taught 2nd grade for 35 years.
             Loves her rose garden and Sunday tea with her daughter.
           </p>
           <div className="vs-card-button">
@@ -461,7 +465,7 @@ const VoiceSession = () => {
             Select Profile
           </div>
         </button>
-        
+
         <button className="vs-profile-card" onClick={() => handleSelectProfile('robert_williams')}>
           <div className="vs-avatar vs-avatar-robert">
             <span className="vs-avatar-emoji">👨‍💼</span>
@@ -469,7 +473,7 @@ const VoiceSession = () => {
           <h3 className="vs-card-name">Robert Williams</h3>
           <p className="vs-card-age">71 years old</p>
           <p className="vs-card-desc">
-            Retired postal worker who delivered mail for 40 years. 
+            Retired postal worker who delivered mail for 40 years.
             Enjoys fishing trips and visits from his grandchildren Emma and Jake.
           </p>
           <div className="vs-card-button">
@@ -478,7 +482,7 @@ const VoiceSession = () => {
           </div>
         </button>
       </div>
-      
+
       <button className="vs-back-link" onClick={() => navigate('/')}>
         <ArrowLeft size={16} />
         Back to Home
@@ -502,7 +506,7 @@ const VoiceSession = () => {
         <User size={16} />
         Change Profile
       </button>
-      
+
       <div className="vs-pre-call-content">
         <div className="vs-patient-preview">
           <div className={`vs-avatar-large ${profile.voice_preference === 'warm_female' ? 'vs-avatar-margaret' : 'vs-avatar-robert'}`}>
@@ -513,18 +517,18 @@ const VoiceSession = () => {
           <h2 className="vs-patient-name">{profile.name}</h2>
           <p className="vs-patient-age">{profile.age} years old</p>
         </div>
-        
+
         <p className="vs-pre-call-heading">
           You're about to start a grounding session with <strong>{profile.preferred_address}</strong>
         </p>
-        
+
         <div className="vs-tips-section">
           <button className="vs-tips-header" onClick={() => setShowTips(!showTips)}>
             <Info size={18} />
             <span>Grounding Tips</span>
             {showTips ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </button>
-          
+
           {showTips && (
             <ul className="vs-tips-list">
               <li>Hand the phone directly to {profile.preferred_address}</li>
@@ -534,12 +538,12 @@ const VoiceSession = () => {
             </ul>
           )}
         </div>
-        
+
         <button className="vs-start-button" onClick={startVoiceSession}>
           <Phone size={22} />
           Start Voice Session
         </button>
-        
+
         <button className="vs-change-link" onClick={resetSession}>
           <ArrowLeft size={16} />
           Change Profile
@@ -581,7 +585,7 @@ const VoiceSession = () => {
             </span>
           </div>
         </div>
-        
+
         <div className="vs-call-meta">
           <span className="vs-exchange-badge">Exchange {exchangeCount} of 3</span>
           <div className="vs-exchange-dots">
@@ -590,12 +594,12 @@ const VoiceSession = () => {
             ))}
           </div>
         </div>
-        
+
         <button className="vs-end-btn-small" onClick={() => setShowEndConfirm(true)} title="End Call">
           <PhoneOff size={20} />
         </button>
       </div>
-      
+
       <div className="vs-transcript" ref={transcriptRef}>
         {transcript.length === 0 ? (
           <div className="vs-transcript-empty">
@@ -604,8 +608,8 @@ const VoiceSession = () => {
           </div>
         ) : (
           transcript.map((msg, idx) => (
-            <div 
-              key={idx} 
+            <div
+              key={idx}
               className={`vs-message vs-message-ai ${msg.isCaringPrompt ? 'vs-message-caring' : ''} ${idx === transcript.length - 1 ? 'vs-message-latest' : ''}`}
             >
               <span className="vs-message-role">
@@ -616,31 +620,31 @@ const VoiceSession = () => {
           ))
         )}
       </div>
-      
+
       <div className="vs-status-bar">
         <div className="vs-status-text vs-status-listening">
           <span className="vs-status-pulse"></span>
           Listening...
         </div>
       </div>
-      
+
       <div className="vs-call-controls">
         <button className={`vs-control-btn ${isMuted ? 'vs-muted' : ''}`} onClick={toggleMute}>
           {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
           <span>{isMuted ? 'Unmute' : 'Mute'}</span>
         </button>
-        
+
         <button className="vs-control-btn vs-end-call-btn" onClick={() => setShowEndConfirm(true)}>
           <PhoneOff size={24} />
           <span>End Call</span>
         </button>
-        
+
         <div className="vs-control-btn vs-duration">
           <Clock size={24} />
           <span>{formatDuration(callDuration)}</span>
         </div>
       </div>
-      
+
       {showEndConfirm && (
         <div className="vs-modal-overlay">
           <div className="vs-modal">
@@ -665,7 +669,7 @@ const VoiceSession = () => {
 
   const renderSummary = () => {
     const stateInfo = getPatientStateInfo();
-    
+
     return (
       <div className="vs-container vs-summary">
         <div className="vs-summary-header">
@@ -676,11 +680,11 @@ const VoiceSession = () => {
             Session ended at {callEndTime?.toLocaleTimeString() || new Date().toLocaleTimeString()}
           </p>
         </div>
-        
+
         <div className="vs-state-badge" style={{ backgroundColor: stateInfo.color }}>
           {stateInfo.emoji} {stateInfo.text}
         </div>
-        
+
         <div className="vs-summary-stats">
           <div className="vs-stat">
             <span className="vs-stat-value">{exchangeCount}</span>
@@ -691,7 +695,7 @@ const VoiceSession = () => {
             <span className="vs-stat-label">Duration</span>
           </div>
         </div>
-        
+
         <div className="vs-transcript-box">
           <h3>Conversation Transcript</h3>
           <div className="vs-transcript-scroll">
@@ -707,7 +711,7 @@ const VoiceSession = () => {
             )}
           </div>
         </div>
-        
+
         <div className="vs-summary-actions">
           <button className="vs-btn-primary" onClick={restartWithSameProfile}>Start New Session</button>
           <button className="vs-btn-secondary" onClick={resetSession}>Change Profile</button>
@@ -724,10 +728,10 @@ const VoiceSession = () => {
         ) : (
           <AlertCircle size={60} color="#D88373" />
         )}
-        
+
         <h2>Something went wrong</h2>
         <p className="vs-error-message">{error}</p>
-        
+
         {errorType === ERROR_TYPE.MICROPHONE && (
           <div className="vs-mic-instructions">
             <p><strong>To enable microphone access:</strong></p>
@@ -738,7 +742,7 @@ const VoiceSession = () => {
             </ol>
           </div>
         )}
-        
+
         <div className="vs-error-actions">
           <button className="vs-btn-primary" onClick={handleRetry}>
             <RefreshCw size={18} />

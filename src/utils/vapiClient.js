@@ -6,17 +6,17 @@
  * 
  * Setup:
  * 1. Get API key from https://vapi.ai (Dashboard > API Keys)
- * 2. Add to .env.local: VITE_VAPI_API_KEY=your_key_here
+ * 2. Add to .env.local: VITE_VAPI_PUBLIC_KEY=your_key_here
  */
 
 import Vapi from '@vapi-ai/web';
 import { generateSystemPrompt, logPromptDetails, validatePromptComplete } from './promptGenerator';
 
 // Check if API key is configured
-const apiKey = import.meta.env.VITE_VAPI_API_KEY;
+const apiKey = import.meta.env.VITE_VAPI_PUBLIC_KEY;
 
-if (!apiKey || apiKey === 'your_vapi_api_key_here') {
-  console.warn('[VAPI] ⚠️ API key not configured. Please add VITE_VAPI_API_KEY to .env.local');
+if (!apiKey || apiKey === 'your_vapi_public_key_here') {
+  console.warn('[VAPI] ⚠️ API key not configured. Please add VITE_VAPI_PUBLIC_KEY to .env.local');
 }
 
 // Initialize VAPI client
@@ -27,7 +27,7 @@ export const vapi = new Vapi(apiKey || '');
  * @returns {boolean}
  */
 export function isVapiConfigured() {
-  return apiKey && apiKey !== 'your_vapi_api_key_here' && apiKey.length > 10;
+  return apiKey && apiKey !== 'your_vapi_public_key_here' && apiKey.length > 10;
 }
 
 /**
@@ -86,10 +86,10 @@ export function createPersonalizedAssistant(profile) {
 
   // Generate dynamic system prompt from profile
   const systemPrompt = generateSystemPrompt(profile);
-  
+
   // Log prompt for debugging (Task 3.1 testing requirement)
   logPromptDetails(systemPrompt, profile.name);
-  
+
   // Validate no placeholders remain
   if (!validatePromptComplete(systemPrompt)) {
     console.warn('[VAPI] Warning: System prompt may have unresolved placeholders');
@@ -97,7 +97,7 @@ export function createPersonalizedAssistant(profile) {
 
   // Voice selection based on profile preference (Task 3.2)
   // Using Azure voices which work reliably
-  const voiceConfig = profile.voice_preference === 'warm_female' 
+  const voiceConfig = profile.voice_preference === 'warm_female'
     ? { provider: "azure", voiceId: "en-US-JennyNeural" }  // Warm female
     : { provider: "azure", voiceId: "en-US-GuyNeural" };    // Warm male
 
@@ -151,13 +151,13 @@ export function createPersonalizedAssistant(profile) {
       language: "en-US"
     },
     firstMessage: firstMessage,
-    
+
     // Call settings - extended for longer conversations
     silenceTimeoutSeconds: 60,      // 60 seconds before timeout
     maxDurationSeconds: 600,        // 10 minutes max
     responseDelaySeconds: 0.3,      // Quick responses for natural flow
     endCallFunctionEnabled: false,  // We handle ending via function call
-    
+
     // Metadata for tracking
     metadata: {
       patientId: profile.patient_id,
