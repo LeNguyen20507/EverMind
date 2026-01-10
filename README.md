@@ -89,7 +89,7 @@ AI: "I can hear you're worried about the children, Margaret. That shows
 | **Speech-to-Text** | Deepgram Nova 2 |
 | **Text-to-Speech** | Azure Neural Voices |
 | **Data Storage** | localStorage (client-side) |
-| **MCP Server** | Model Context Protocol (optional) |
+| **MCP Server** | EverMind MCP Server (Model Context Protocol) |
 
 ---
 
@@ -198,26 +198,27 @@ adtreat/
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐       │
-│  │  Tracking    │───▶│  Activity    │───▶│   Profile    │       │
-│  │    Page      │    │   Tracker    │    │  Generator   │       │
+│  │  Tracking    │───▶│  Activity    │───▶│  EverMind    │       │
+│  │    Page      │    │   Tracker    │    │  MCP Server  │       │
 │  └──────────────┘    └──────────────┘    └──────────────┘       │
 │         │                   │                    │               │
 │         ▼                   ▼                    ▼               │
 │  ┌────────────────────────────────────────────────────────┐     │
-│  │                  PatientContext                         │     │
-│  │  • Current patient selection                            │     │
+│  │              EverMind MCP Server                        │     │
 │  │  • Patient profiles & medical info                      │     │
 │  │  • Mood logs & conversation notes                       │     │
+│  │  • Emergency context & tracking data                    │     │
+│  │  • Provides structured context to AI                    │     │
 │  └────────────────────────────────────────────────────────┘     │
 │                            │                                     │
 │                            ▼                                     │
 │  ┌────────────────────────────────────────────────────────┐     │
 │  │                   SOS Modal                             │     │
 │  │                                                         │     │
-│  │  1. Maps patient data → MCP profile format              │     │
-│  │  2. Pulls recent tracking data (moods, notes)           │     │
+│  │  1. Fetches patient data from MCP Server                │     │
+│  │  2. Pulls tracking data (moods, notes) from MCP         │     │
 │  │  3. Generates personalized system prompt                │     │
-│  │  4. Initiates VAPI voice call                           │     │
+│  │  4. Initiates VAPI voice call with full context         │     │
 │  └────────────────────────────────────────────────────────┘     │
 │                            │                                     │
 └────────────────────────────┼─────────────────────────────────────┘
@@ -322,9 +323,9 @@ npm run build
 npm run preview
 ```
 
-### Optional: MCP Server
+### EverMind MCP Server
 
-The MCP (Model Context Protocol) server provides an alternative way to serve patient profiles:
+The **EverMind MCP Server** (Model Context Protocol) is a core component that serves as the data hub between the app and the AI. All tracking information (moods, notes, emergency context) flows through the MCP server before being sent to the AI, ensuring the voice assistant has complete, structured context.
 
 ```bash
 cd mcp-server
@@ -332,53 +333,47 @@ npm install
 npm start
 ```
 
+The MCP Server provides:
+- Structured patient profile data
+- Real-time tracking information
+- Emergency context prioritization
+- Consistent data format for AI consumption
+
 ---
 
-## Demo Patients
+## Patient Profiles
 
-The app includes three demo patients for testing:
+### Adding Your Own Patients
 
-1. **Margaret Thompson** (Maggie) - 78, Early-Stage
-   - Former teacher, loves music from the 1960s
+You can add any patient information through the app interface. Use the patient switcher (top-right avatar) to create new patient profiles with:
+- Personal information (name, age, diagnosis stage)
+- Medical details (medications, allergies, doctor info)
+- Emergency contacts
+- Comfort memories and calming strategies
+- Known triggers to avoid
+- Favorite music and voice recordings
+
+### Default Patients
+
+The app comes with three pre-configured patients to help you get started:
+
+1. **Margaret Thompson** (Maggie) - 78, Early-Stage Alzheimer's
+   - Former elementary school teacher, loves 1960s music
    - Triggers: loud noises, being rushed
    
-2. **William O'Connor** (Bill) - 81, Moderate Stage
-   - Former firefighter, Red Sox fan
+2. **William O'Connor** (Bill) - 81, Moderate Alzheimer's
+   - Former firefighter, Boston Red Sox fan
    - Triggers: evening time (sundowning), crowds
 
-3. **Dorothy Mae Johnson** (Dot) - 84, Moderate-Severe
-   - Church choir singer, loves gospel music
+3. **Dorothy Mae Johnson** (Dot) - 84, Moderate-Severe Alzheimer's
+   - Church choir singer for 50 years, loves gospel music
    - Triggers: being alone, darkness
-
----
-
-## Contributing
-
-We welcome contributions! Please see our contributing guidelines for details.
-
-### Priority Areas
-
-- [ ] ElevenLabs voice integration for more natural TTS
-- [ ] Offline support with service workers
-- [ ] Family photo gallery integration
-- [ ] Music playback during calls
-- [ ] Multi-language support
 
 ---
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## Acknowledgments
-
-- Built for the **Hackathon 2025** challenge
-- Inspired by real caregiving experiences
-- Uses evidence-based dementia care techniques
-- Thanks to VAPI, Anthropic, and Azure for their APIs
-
 ---
 
 <div align="center">
