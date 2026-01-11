@@ -46,22 +46,59 @@ const mapPatientToProfile = (patient) => {
      patient.name?.toLowerCase().includes('mary') ? 'warm_female' : 'warm_male');
 
   // Get recent tracking data to provide AI context
-  const recentMoods = getMoodHistory(patient.id, 3); // Last 3 days
+  const recentMoods = getMoodHistory(patient.id, 7); // Last 7 days for better pattern
   const todayDate = new Date().toISOString().split('T')[0];
+  const yesterdayDate = new Date(Date.now() - 86400000).toISOString().split('T')[0];
   const todayNotes = getConversationNotes(patient.id, todayDate);
-  const recentActivities = getRecentActivities(3, patient.id);
+  const yesterdayNotes = getConversationNotes(patient.id, yesterdayDate);
+  const recentActivities = getRecentActivities(7, patient.id);
 
-  // Format mood summary for AI
+  // Format mood summary for AI - include more detail
   const moodSummary = recentMoods.length > 0
-    ? recentMoods.map(d => `${d.dayOfWeek}: ${d.predominantMood || 'not logged'}`).join(', ')
+    ? recentMoods
+        .filter(d => d.predominantMood)
+        .map(d => `${d.dayOfWeek}: ${d.predominantMood}${d.moods?.[0]?.note ? ` (${d.moods[0].note})` : ''}`)
+        .join(', ') || 'No recent mood data'
     : 'No recent mood data';
 
-  // Format notes for AI (prioritize emergency tags)
-  const emergencyNotes = todayNotes.filter(n => n.tag === 'emergency');
-  const otherNotes = todayNotes.filter(n => n.tag !== 'emergency').slice(0, 5);
-  const noteSummary = [...emergencyNotes, ...otherNotes]
-    .map(n => `[${n.tag || 'note'}] ${n.text}`)
+  // Combine today and yesterday notes for fuller context
+  const allRecentNotes = [...todayNotes, ...yesterdayNotes.map(n => ({ ...n, isYesterday: true }))];
+  
+  // Format notes for AI (prioritize emergency tags, include more detail)
+  const emergencyNotes = allRecentNotes.filter(n => n.tag === 'emergency');
+  const behaviorNotes = allRecentNotes.filter(n => n.tag === 'behavior');
+  const medicalNotes = allRecentNotes.filter(n => n.tag === 'medical');
+  const otherNotes = allRecentNotes.filter(n => !['emergency', 'behavior', 'medical'].includes(n.tag)).slice(0, 3);
+  
+  // Build comprehensive notes summary
+  const formatNote = (n) => {
+    const timeLabel = n.isYesterday ? '(yesterday)' : '(today)';
+    return `[${n.tag || 'note'}] ${timeLabel} ${n.text}`;
+  };
+  
+  const noteSummary = [...emergencyNotes, ...behaviorNotes, ...medicalNotes, ...otherNotes]
+    .map(formatNote)
     .join(' | ') || 'No notes today';
+
+  // Build richer calming topics from patient data
+  const calmingTopics = [];
+  if (patient.favoriteSongs?.length > 0) {
+    calmingTopics.push(...patient.favoriteSongs.slice(0, 2).map(s => `${s.title} by ${s.artist}`));
+  }
+  if (patient.favoriteThings?.activity) calmingTopics.push(patient.favoriteThings.activity);
+  if (patient.favoriteThings?.place) calmingTopics.push(patient.favoriteThings.place);
+  if (patient.comfortMemories?.length > 0) calmingTopics.push(patient.comfortMemories[0]);
+  // Fallback
+  if (calmingTopics.length === 0) calmingTopics.push('Music', 'Family memories');
+
+  // Build comprehensive core identity
+  const coreIdentityParts = [
+    `${patient.preferredName} is ${patient.age} years old`,
+    patient.location ? `from ${patient.location}` : '',
+    patient.diagnosis || '',
+    patient.favoriteThings?.era ? `They especially love things from the ${patient.favoriteThings.era}` : '',
+    patient.favoriteThings?.person ? `Their favorite person to talk about is ${patient.favoriteThings.person}` : ''
+  ].filter(Boolean);
 
   return {
     patient_id: patient.id,
@@ -69,13 +106,15 @@ const mapPatientToProfile = (patient) => {
     preferred_address: patient.preferredName,
     age: patient.age,
     diagnosis_stage: patient.stage,
-    core_identity: `${patient.preferredName} is ${patient.age} years old from ${patient.location}. ${patient.diagnosis || ''}`,
-    safe_place: `their home in ${patient.location}`,
-    comfort_memory: `${patient.preferredName} finds comfort in ${comfortMemories}.`,
+    core_identity: coreIdentityParts.join('. ') + '.',
+    safe_place: patient.favoriteThings?.place 
+      ? `${patient.favoriteThings.place} and their home in ${patient.location || 'their community'}`
+      : `their home in ${patient.location || 'their community'}`,
+    comfort_memory: `${patient.preferredName} finds comfort in ${comfortMemories}. ${patient.favoriteThings?.food ? `Their favorite food is ${patient.favoriteThings.food}.` : ''}`,
     common_trigger: triggers,
     calming_strategies: calmingStrategies,
     voice_preference: voicePreference,
-    calming_topics: patient.favoriteSongs?.map(s => s.title) || ['Music', 'Family memories'],
+    calming_topics: calmingTopics.slice(0, 5),
     avoid_topics: patient.triggers || [],
     favorite_music: patient.favoriteSongs || [],
     emergency_contacts: patient.emergencyContacts || [],

@@ -34,18 +34,39 @@ export function generateSystemPrompt(profile) {
   const topic1 = profile.calming_topics[0] || 'what you enjoy';
   const topic2 = profile.calming_topics[1] || 'your interests';
   
-  // Get tracking context if available
+  // Get tracking context if available - THIS IS CRITICAL FOR PERSONALIZATION
   const moodContext = profile.recent_mood_summary && profile.recent_mood_summary !== 'No recent mood data'
-    ? `\nRECENT MOOD PATTERN: ${profile.recent_mood_summary}`
+    ? `\n• RECENT MOOD PATTERN: ${profile.recent_mood_summary}`
     : '';
   
   const notesContext = profile.todays_notes && profile.todays_notes !== 'No notes today'
-    ? `\nCAREGIVER NOTES TODAY: ${profile.todays_notes}`
+    ? `\n• TODAY'S CAREGIVER NOTES: ${profile.todays_notes}`
     : '';
-  
-  const trackingSection = (moodContext || notesContext) 
-    ? `\n\nRECENT CAREGIVER TRACKING DATA:${moodContext}${notesContext}\n\nIMPORTANT: Use this tracking information to inform your approach. If recent moods show difficulty, be extra gentle and patient. If there are emergency-tagged notes, those concerns should be your priority. This data comes from the caregiver who knows ${firstName} best.`
-    : '';
+
+  // Build detailed tracking section that the AI MUST use
+  let trackingSection = '';
+  if (moodContext || notesContext) {
+    trackingSection = `
+
+═══════════════════════════════════════════════════════════════════
+⚠️  CRITICAL: REAL-TIME TRACKING DATA FROM MCP SERVER
+    This information was just logged by the caregiver - USE IT!
+═══════════════════════════════════════════════════════════════════
+${moodContext}${notesContext}
+
+HOW TO USE THIS TRACKING DATA:
+1. If moods have been "difficult" or "very_hard" recently → Be EXTRA gentle, speak slower, offer more reassurance
+2. If there are [emergency] tagged notes → These are URGENT concerns - address them proactively
+3. If notes mention specific behaviors (wandering, agitation, confusion) → Acknowledge and redirect using their comfort memories
+4. If notes mention something positive → Reference it! "I heard you had a good [activity] today"
+5. COMBINE tracking data with their profile: Use their calming topics (${topic1}, ${topic2}) to address any concerns noted
+
+EXAMPLE: If a note says "[behavior] Has been asking about going to work" and their profile says they were a teacher:
+→ Say: "I know you're thinking about your students, ${firstName}. They were so lucky to have you. Tell me about your favorite classroom memory."
+
+The caregiver took time to log this information - it's your BEST guide to helping ${firstName} right now.
+═══════════════════════════════════════════════════════════════════`;
+  }
 
   // Emergency contacts for reference
   const emergencyContactsInfo = profile.emergency_contacts && profile.emergency_contacts.length > 0
@@ -95,10 +116,20 @@ GROUNDING TECHNIQUES TO USE:
    - Bring up comforting memories: "${comfort}"
    - Ask about ${topic1} or ${topic2}
    - "Tell me about [favorite memory or person]..."
+   - ALWAYS connect tracking notes to their profile: If notes say they're anxious about work, use their work history to redirect
 
 5. **REASSURANCE LOOP**
    - Repeat calming phrases: "You are safe. You are loved. I'm right here."
    - "Your family loves you. ${emergencyContactsInfo} are thinking of you."
+
+YOUR RESPONSE STRATEGY (FOLLOW THIS PATTERN):
+1. First, acknowledge their current state (use tracking data if available)
+2. Then, validate their feelings
+3. Finally, redirect using their profile info (comfort memories, favorite topics)
+
+Example combining tracking + profile:
+- If tracking says "[behavior] asking about going home" and profile says they love gardening:
+  → "I understand you want to be home, ${firstName}. That makes perfect sense. Tell me about your garden - what do you love to grow?"
 
 CONVERSATION RULES:
 
